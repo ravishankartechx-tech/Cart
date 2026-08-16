@@ -1,160 +1,160 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { HiStar, HiClock, HiOutlineCurrencyRupee, HiArrowLeft, HiSearch } from 'react-icons/hi';
 import ReviewCard from '../components/ReviewCard';
 import { SkeletonMenuRow } from '../components/SkeletonLoader';
 
-// ─── Unique, accurate food photos per item ────────────────────────────────────
+// â”€â”€â”€ Unique, accurate food photos per item â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const RESTAURANT_DATA = {
   "1": {
-    info: { name: "Meghana Foods", cuisines: "Biryani, Andhra, South Indian", rating: "4.4", deliveryTime: "31 mins", costForTwo: "₹500 for two", location: "Koramangala, Bangalore" },
-    coverImage: 'https://images.pexels.com/photos/7353380/pexels-photo-7353380.jpeg?auto=compress&cs=tinysrgb&w=800',
+    info: { name: "Meghana Foods", cuisines: "Biryani, Andhra, South Indian", rating: "4.4", deliveryTime: "31 mins", costForTwo: "â‚¹500 for two", location: "Koramangala, Bangalore" },
+    coverImage: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop',
     menus: [
       { category: "Biryani & Rice", items: [
-        { id: 'm1', name: 'Chicken Boneless Biryani', price: 345, desc: 'Special boneless chicken chunks cooked with aromatic basmati rice and signature Andhra spices.', isVeg: false, isBestSeller: true,  image: 'https://images.pexels.com/photos/7353380/pexels-photo-7353380.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'm2', name: 'Mutton Biryani',           price: 420, desc: 'Tender mutton marrow layered with fragrant biryani rice, fried onions and mint.', isVeg: false, isBestSeller: false, image: 'https://images.pexels.com/photos/12737713/pexels-photo-12737713.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'm3', name: 'Paneer Biryani',           price: 290, desc: 'Fresh paneer cubes layered with long grain basmati rice and whole spices.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/9609836/pexels-photo-9609836.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'm1', name: 'Chicken Boneless Biryani', price: 345, desc: 'Special boneless chicken chunks cooked with aromatic basmati rice and signature Andhra spices.', isVeg: false, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop' },
+        { id: 'm2', name: 'Mutton Biryani',           price: 420, desc: 'Tender mutton marrow layered with fragrant biryani rice, fried onions and mint.', isVeg: false, isBestSeller: false, image: 'https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=400&auto=format&fit=crop' },
+        { id: 'm3', name: 'Paneer Biryani',           price: 290, desc: 'Fresh paneer cubes layered with long grain basmati rice and whole spices.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400&auto=format&fit=crop' },
       ]},
       { category: "South Indian Specials", items: [
-        { id: 'm6', name: 'Pesarattu (Green Moong Dosa)', price: 130, desc: 'Crispy green moong dal crepe served with ginger chutney and upma stuffing.', isVeg: true,  isBestSeller: true,  image: 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'm7', name: 'Rasam Rice',                  price: 110, desc: 'Comforting thin pepper-tamarind soup served over soft steamed rice.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/674574/pexels-photo-674574.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'm6', name: 'Pesarattu (Green Moong Dosa)', price: 130, desc: 'Crispy green moong dal crepe served with ginger chutney and upma stuffing.', isVeg: true,  isBestSeller: true,  image: 'https://images.unsplash.com/photo-1630383249896-483b1fbf6e5f?w=800&auto=format&fit=crop' },
+        { id: 'm7', name: 'Rasam Rice',                  price: 110, desc: 'Comforting thin pepper-tamarind soup served over soft steamed rice.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "Andhra Starters", items: [
-        { id: 'm4', name: 'Guntur Chicken Dry', price: 280, desc: 'Fiery deep fried chicken tossed with curry leaves and Guntur chillies.', isVeg: false, isBestSeller: true,  image: 'https://images.pexels.com/photos/2313686/pexels-photo-2313686.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'm5', name: 'Chilli Paneer',     price: 240, desc: 'Stir fried paneer tossed in spicy soy sauce and bell peppers.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/6559087/pexels-photo-6559087.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'm4', name: 'Guntur Chicken Dry', price: 280, desc: 'Fiery deep fried chicken tossed with curry leaves and Guntur chillies.', isVeg: false, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'm5', name: 'Chilli Paneer',     price: 240, desc: 'Stir fried paneer tossed in spicy soy sauce and bell peppers.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
     ]
   },
 
   "2": {
-    info: { name: "Empire Restaurant", cuisines: "North Indian, Mughlai, Kebabs", rating: "4.2", deliveryTime: "40 mins", costForTwo: "₹700 for two", location: "Church Street, Bangalore" },
-    coverImage: 'https://images.pexels.com/photos/2233688/pexels-photo-2233688.jpeg?auto=compress&cs=tinysrgb&w=800',
+    info: { name: "Empire Restaurant", cuisines: "North Indian, Mughlai, Kebabs", rating: "4.2", deliveryTime: "40 mins", costForTwo: "â‚¹700 for two", location: "Church Street, Bangalore" },
+    coverImage: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&auto=format&fit=crop',
     menus: [
       { category: "Tandoor & Kebabs", items: [
-        { id: 'e1', name: 'Empire Special Chicken Kebab', price: 280, desc: 'Signature crispy spiced chicken pieces with mint chutney.', isVeg: false, isBestSeller: true,  image: 'https://images.pexels.com/photos/2233688/pexels-photo-2233688.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'e2', name: 'Tandoori Chicken (Half)',      price: 320, desc: 'Clay oven roasted chicken marinated in yogurt, lemon and tandoori masala.', isVeg: false, isBestSeller: false, image: 'https://images.pexels.com/photos/2313686/pexels-photo-2313686.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'e5', name: 'Seekh Kebab (4 pcs)',          price: 260, desc: 'Minced mutton mixed with herbs and spices, skewered and grilled in tandoor.', isVeg: false, isBestSeller: false, image: 'https://images.pexels.com/photos/6210876/pexels-photo-6210876.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'e1', name: 'Empire Special Chicken Kebab', price: 280, desc: 'Signature crispy spiced chicken pieces with mint chutney.', isVeg: false, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&auto=format&fit=crop' },
+        { id: 'e2', name: 'Tandoori Chicken (Half)',      price: 320, desc: 'Clay oven roasted chicken marinated in yogurt, lemon and tandoori masala.', isVeg: false, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'e5', name: 'Seekh Kebab (4 pcs)',          price: 260, desc: 'Minced mutton mixed with herbs and spices, skewered and grilled in tandoor.', isVeg: false, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "Curries & Bread", items: [
-        { id: 'e3', name: 'Butter Chicken Masala', price: 350, desc: 'Rich creamy tomato gravy with tender roasted chicken — the classic favourite.', isVeg: false, isBestSeller: false, image: 'https://images.pexels.com/photos/9609814/pexels-photo-9609814.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'e4', name: 'Garlic Naan',           price: 70,  desc: 'Fluffy tandoor baked flatbread infused with garlic, butter and cilantro.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/3650436/pexels-photo-3650436.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'e6', name: 'Dal Makhani',           price: 220, desc: 'Slow-cooked black lentils simmered overnight in butter and cream.', isVeg: true,  isBestSeller: true,  image: 'https://images.pexels.com/photos/674574/pexels-photo-674574.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'e3', name: 'Butter Chicken Masala', price: 350, desc: 'Rich creamy tomato gravy with tender roasted chicken â€” the classic favourite.', isVeg: false, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'e4', name: 'Garlic Naan',           price: 70,  desc: 'Fluffy tandoor baked flatbread infused with garlic, butter and cilantro.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'e6', name: 'Dal Makhani',           price: 220, desc: 'Slow-cooked black lentils simmered overnight in butter and cream.', isVeg: true,  isBestSeller: true,  image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
     ]
   },
 
   "3": {
-    info: { name: "Truffles", cuisines: "American, Burgers, Pasta, Desserts", rating: "4.6", deliveryTime: "25 mins", costForTwo: "₹800 for two", location: "Indiranagar, Bangalore" },
-    coverImage: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=800',
+    info: { name: "Truffles", cuisines: "American, Burgers, Pasta, Desserts", rating: "4.6", deliveryTime: "25 mins", costForTwo: "â‚¹800 for two", location: "Indiranagar, Bangalore" },
+    coverImage: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&auto=format&fit=crop',
     menus: [
       { category: "Gourmet Burgers", items: [
-        { id: 't1', name: 'All American Cheese Burger', price: 250, desc: 'Juicy beef patty, cheddar cheese, lettuce, tomatoes and secret sauce on a brioche bun.', isVeg: false, isBestSeller: true,  image: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 't2', name: 'Crispy Veggie Burger',       price: 190, desc: 'Crispy potato & pea patty with eggless mayo and fresh lettuce on a sesame bun.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/3219547/pexels-photo-3219547.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 't5', name: 'Smoky BBQ Chicken Burger',  price: 280, desc: 'Grilled chicken, smoked gouda, caramelised onions and BBQ sauce.', isVeg: false, isBestSeller: false, image: 'https://images.pexels.com/photos/2271107/pexels-photo-2271107.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 't1', name: 'All American Cheese Burger', price: 250, desc: 'Juicy beef patty, cheddar cheese, lettuce, tomatoes and secret sauce on a brioche bun.', isVeg: false, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&auto=format&fit=crop' },
+        { id: 't2', name: 'Crispy Veggie Burger',       price: 190, desc: 'Crispy potato & pea patty with eggless mayo and fresh lettuce on a sesame bun.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 't5', name: 'Smoky BBQ Chicken Burger',  price: 280, desc: 'Grilled chicken, smoked gouda, caramelised onions and BBQ sauce.', isVeg: false, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "Pizzas & Pasta", items: [
-        { id: 't3', name: 'Margarita Pizza (10")',  price: 350, desc: 'Classic Napoletana pizza with fresh basil, san marzano tomatoes and mozzarella.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/1049620/pexels-photo-1049620.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 't4', name: 'Penne Alfredo',          price: 320, desc: 'Penne pasta in a rich creamy parmesan white sauce with garlic and mushrooms.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/1437267/pexels-photo-1437267.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 't6', name: 'Spaghetti Arrabbiata',  price: 290, desc: 'Spicy tomato sauce with garlic, red chilli flakes and fresh basil.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/1527603/pexels-photo-1527603.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 't3', name: 'Margarita Pizza (10")',  price: 350, desc: 'Classic Napoletana pizza with fresh basil, san marzano tomatoes and mozzarella.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 't4', name: 'Penne Alfredo',          price: 320, desc: 'Penne pasta in a rich creamy parmesan white sauce with garlic and mushrooms.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 't6', name: 'Spaghetti Arrabbiata',  price: 290, desc: 'Spicy tomato sauce with garlic, red chilli flakes and fresh basil.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "Desserts", items: [
-        { id: 't7', name: 'Chocolate Lava Cake', price: 180, desc: 'Warm chocolate cake with a gooey molten centre, served with vanilla ice cream.', isVeg: true, isBestSeller: true, image: 'https://images.pexels.com/photos/2373520/pexels-photo-2373520.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 't7', name: 'Chocolate Lava Cake', price: 180, desc: 'Warm chocolate cake with a gooey molten centre, served with vanilla ice cream.', isVeg: true, isBestSeller: true, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
     ]
   },
 
   "4": {
-    info: { name: "Corner House Ice Cream", cuisines: "Desserts, Ice Cream, Shakes", rating: "4.8", deliveryTime: "20 mins", costForTwo: "₹400 for two", location: "Jayanagar, Bangalore" },
-    coverImage: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=800',
+    info: { name: "Corner House Ice Cream", cuisines: "Desserts, Ice Cream, Shakes", rating: "4.8", deliveryTime: "20 mins", costForTwo: "â‚¹400 for two", location: "Jayanagar, Bangalore" },
+    coverImage: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=800&auto=format&fit=crop',
     menus: [
       { category: "Signature Sundaes", items: [
-        { id: 'c1', name: 'Death by Chocolate',   price: 290, desc: 'Dark chocolate cake, chocolate ice cream, chocolate sauce, cherries and peanuts.', isVeg: true, isBestSeller: true,  image: 'https://images.pexels.com/photos/2373520/pexels-photo-2373520.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'c2', name: 'Cake Fudge',           price: 210, desc: 'Vanilla ice cream with hot chocolate fudge and rich sponge cake.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'c4', name: 'Fresh Fruit Sundae',   price: 230, desc: 'Scoops of fruit sorbet topped with seasonal fresh fruits and berry coulis.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/1560932/pexels-photo-1560932.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'c1', name: 'Death by Chocolate',   price: 290, desc: 'Dark chocolate cake, chocolate ice cream, chocolate sauce, cherries and peanuts.', isVeg: true, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'c2', name: 'Cake Fudge',           price: 210, desc: 'Vanilla ice cream with hot chocolate fudge and rich sponge cake.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'c4', name: 'Fresh Fruit Sundae',   price: 230, desc: 'Scoops of fruit sorbet topped with seasonal fresh fruits and berry coulis.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "Shakes & Coolers", items: [
-        { id: 'c3', name: 'Oreo Shake',           price: 150, desc: 'Thick creamy milkshake blended with Oreo cookies and vanilla ice cream.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/3727250/pexels-photo-3727250.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'c5', name: 'Mango Mastani',        price: 180, desc: 'Thick mango shake topped with ice cream, dry fruits and rose syrup.', isVeg: true, isBestSeller: true,  image: 'https://images.pexels.com/photos/1300972/pexels-photo-1300972.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'c3', name: 'Oreo Shake',           price: 150, desc: 'Thick creamy milkshake blended with Oreo cookies and vanilla ice cream.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'c5', name: 'Mango Mastani',        price: 180, desc: 'Thick mango shake topped with ice cream, dry fruits and rose syrup.', isVeg: true, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
     ]
   },
 
   "5": {
-    info: { name: "A2B — Adyar Ananda Bhavan", cuisines: "South Indian, Sweets, Pure Veg", rating: "4.3", deliveryTime: "30 mins", costForTwo: "₹300 for two", location: "Whitefield, Bangalore" },
-    coverImage: 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=800',
+    info: { name: "A2B â€” Adyar Ananda Bhavan", cuisines: "South Indian, Sweets, Pure Veg", rating: "4.3", deliveryTime: "30 mins", costForTwo: "â‚¹300 for two", location: "Whitefield, Bangalore" },
+    coverImage: 'https://images.unsplash.com/photo-1630383249896-483b1fbf6e5f?w=800&auto=format&fit=crop',
     menus: [
       { category: "Classic South Indian", items: [
-        { id: 'a1', name: 'Masala Dosa',         price: 120, desc: 'Crispy golden rice crêpe stuffed with spiced potato mash. Served with sambar and 3 chutneys.', isVeg: true, isBestSeller: true,  image: 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'a2', name: 'Idli Vada Combo',    price: 110, desc: 'Two soft idlis and one crispy medu vada served with sambar and coconut chutney.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/4331489/pexels-photo-4331489.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'a4', name: 'Ghee Pongal',        price: 130, desc: 'Karnataka-style rice and lentil porridge tempered with ghee, pepper and cashews.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/674574/pexels-photo-674574.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'a5', name: 'Set Dosa (3 pcs)',   price: 100, desc: 'Soft, fluffy, slightly fermented small dosas served with potato sabji and chutney.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'a6', name: 'Bisibelebath',       price: 140, desc: 'Traditional Karnataka dish of rice, lentils and vegetables cooked in tamarind gravy.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/674574/pexels-photo-674574.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'a1', name: 'Masala Dosa',         price: 120, desc: 'Crispy golden rice crÃªpe stuffed with spiced potato mash. Served with sambar and 3 chutneys.', isVeg: true, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1630383249896-483b1fbf6e5f?w=800&auto=format&fit=crop' },
+        { id: 'a2', name: 'Idli Vada Combo',    price: 110, desc: 'Two soft idlis and one crispy medu vada served with sambar and coconut chutney.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'a4', name: 'Ghee Pongal',        price: 130, desc: 'Karnataka-style rice and lentil porridge tempered with ghee, pepper and cashews.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'a5', name: 'Set Dosa (3 pcs)',   price: 100, desc: 'Soft, fluffy, slightly fermented small dosas served with potato sabji and chutney.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1630383249896-483b1fbf6e5f?w=800&auto=format&fit=crop' },
+        { id: 'a6', name: 'Bisibelebath',       price: 140, desc: 'Traditional Karnataka dish of rice, lentils and vegetables cooked in tamarind gravy.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "Filter Coffee & Beverages", items: [
-        { id: 'a7', name: 'Filter Coffee (Degree)', price: 60, desc: 'Authentic South Indian filter coffee served in a traditional brass tumbler-davara set.', isVeg: true, isBestSeller: true, image: 'https://images.pexels.com/photos/312418/pexels-photo-312418.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'a8', name: 'Badam Milk',            price: 80, desc: 'Warm saffron almond milk with cardamom and dry fruits.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/3727250/pexels-photo-3727250.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'a7', name: 'Filter Coffee (Degree)', price: 60, desc: 'Authentic South Indian filter coffee served in a traditional brass tumbler-davara set.', isVeg: true, isBestSeller: true, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'a8', name: 'Badam Milk',            price: 80, desc: 'Warm saffron almond milk with cardamom and dry fruits.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "Sweets & Mithai", items: [
-        { id: 'a3', name: 'Gulab Jamun (2 pcs)', price: 90,  desc: 'Hot milk dumplings soaked in rose-flavoured sugar syrup, served warm.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/10580814/pexels-photo-10580814.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'a9', name: 'Kaju Katli (100g)',   price: 120, desc: 'Premium cashew fudge with silver vark — the classic Indian festive sweet.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/10580814/pexels-photo-10580814.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'a3', name: 'Gulab Jamun (2 pcs)', price: 90,  desc: 'Hot milk dumplings soaked in rose-flavoured sugar syrup, served warm.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'a9', name: 'Kaju Katli (100g)',   price: 120, desc: 'Premium cashew fudge with silver vark â€” the classic Indian festive sweet.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
     ]
   },
 
   "6": {
-    info: { name: "California Burrito", cuisines: "Mexican, Healthy, Salads", rating: "4.5", deliveryTime: "25 mins", costForTwo: "₹500 for two", location: "HSR Layout, Bangalore" },
-    coverImage: 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=800',
+    info: { name: "California Burrito", cuisines: "Mexican, Healthy, Salads", rating: "4.5", deliveryTime: "25 mins", costForTwo: "â‚¹500 for two", location: "HSR Layout, Bangalore" },
+    coverImage: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800&auto=format&fit=crop',
     menus: [
       { category: "Burritos & Bowls", items: [
-        { id: 'cb1', name: 'Crispy Chicken Burrito', price: 260, desc: 'Flour tortilla wrapped with cilantro lime rice, beans, crispy chicken and pico de gallo.', isVeg: false, isBestSeller: true,  image: 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'cb2', name: 'BBQ Paneer Bowl',       price: 240, desc: 'Healthy bowl with brown rice, black beans, BBQ paneer and corn salsa.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'cb4', name: 'Veggie Fajita Wrap',    price: 210, desc: 'Grilled bell peppers, onions and zucchini with sour cream in a warm flour tortilla.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/2955819/pexels-photo-2955819.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'cb1', name: 'Crispy Chicken Burrito', price: 260, desc: 'Flour tortilla wrapped with cilantro lime rice, beans, crispy chicken and pico de gallo.', isVeg: false, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=800&auto=format&fit=crop' },
+        { id: 'cb2', name: 'BBQ Paneer Bowl',       price: 240, desc: 'Healthy bowl with brown rice, black beans, BBQ paneer and corn salsa.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'cb4', name: 'Veggie Fajita Wrap',    price: 210, desc: 'Grilled bell peppers, onions and zucchini with sour cream in a warm flour tortilla.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "Sides & Extras", items: [
-        { id: 'cb3', name: 'Nachos with Guacamole', price: 180, desc: 'Crispy tortilla chips served with freshly made guacamole, salsa and sour cream.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/1618898/pexels-photo-1618898.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'cb5', name: 'Churros (4 pcs)',       price: 150, desc: 'Warm cinnamon fried dough sticks served with a rich chocolate dipping sauce.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/2373520/pexels-photo-2373520.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'cb3', name: 'Nachos with Guacamole', price: 180, desc: 'Crispy tortilla chips served with freshly made guacamole, salsa and sour cream.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'cb5', name: 'Churros (4 pcs)',       price: 150, desc: 'Warm cinnamon fried dough sticks served with a rich chocolate dipping sauce.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
     ]
   },
 
   "7": {
-    info: { name: "Vidyarthi Bhavan", cuisines: "South Indian, Breakfast, Pure Veg", rating: "4.7", deliveryTime: "28 mins", costForTwo: "₹250 for two", location: "Gandhi Bazaar, Bangalore" },
-    coverImage: 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=800',
+    info: { name: "Vidyarthi Bhavan", cuisines: "South Indian, Breakfast, Pure Veg", rating: "4.7", deliveryTime: "28 mins", costForTwo: "â‚¹250 for two", location: "Gandhi Bazaar, Bangalore" },
+    coverImage: 'https://images.unsplash.com/photo-1630383249896-483b1fbf6e5f?w=800&auto=format&fit=crop',
     menus: [
       { category: "Vidyarthi Specials", items: [
-        { id: 'vb1', name: 'Benne Masala Dosa',    price: 130, desc: 'The iconic 80-year-old recipe — crispy butter dosa with a generous potato masala stuffing.', isVeg: true, isBestSeller: true,  image: 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'vb2', name: 'Khali Dosa (Plain)',   price: 80,  desc: 'Crispy thin plain dosa with coconut chutney and sambar. Deceptively simple, absolutely perfect.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'vb3', name: 'Rava Idli',            price: 90,  desc: 'Fluffy semolina idli with ghee, mustard seeds, curry leaves and cashews.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/4331489/pexels-photo-4331489.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'vb4', name: 'Kesari Bath',          price: 70,  desc: "South Indian saffron semolina halwa with ghee, cashews and raisins. Warm and comforting.", isVeg: true, isBestSeller: true, image: 'https://images.pexels.com/photos/10580814/pexels-photo-10580814.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'vb1', name: 'Benne Masala Dosa',    price: 130, desc: 'The iconic 80-year-old recipe â€” crispy butter dosa with a generous potato masala stuffing.', isVeg: true, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1630383249896-483b1fbf6e5f?w=800&auto=format&fit=crop' },
+        { id: 'vb2', name: 'Khali Dosa (Plain)',   price: 80,  desc: 'Crispy thin plain dosa with coconut chutney and sambar. Deceptively simple, absolutely perfect.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1630383249896-483b1fbf6e5f?w=800&auto=format&fit=crop' },
+        { id: 'vb3', name: 'Rava Idli',            price: 90,  desc: 'Fluffy semolina idli with ghee, mustard seeds, curry leaves and cashews.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'vb4', name: 'Kesari Bath',          price: 70,  desc: "South Indian saffron semolina halwa with ghee, cashews and raisins. Warm and comforting.", isVeg: true, isBestSeller: true, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "Meals", items: [
-        { id: 'vb5', name: 'South Indian Meals', price: 180, desc: 'Rice, sambar, rasam, kootu, poriyal, papadam, pickle and payasam — a complete thali.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/674574/pexels-photo-674574.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'vb5', name: 'South Indian Meals', price: 180, desc: 'Rice, sambar, rasam, kootu, poriyal, papadam, pickle and payasam â€” a complete thali.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "Beverages", items: [
-        { id: 'vb6', name: 'Filter Coffee',  price: 50, desc: 'Classic South Indian filter coffee with frothy milk and chicory blend.', isVeg: true, isBestSeller: true,  image: 'https://images.pexels.com/photos/312418/pexels-photo-312418.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'vb7', name: 'Fresh Lime Soda', price: 60, desc: 'Chilled lime soda — sweet, salt, or both. The ultimate Bangalore thirst quencher.', isVeg: true, isBestSeller: false, image: 'https://images.pexels.com/photos/1300972/pexels-photo-1300972.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'vb6', name: 'Filter Coffee',  price: 50, desc: 'Classic South Indian filter coffee with frothy milk and chicory blend.', isVeg: true, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'vb7', name: 'Fresh Lime Soda', price: 60, desc: 'Chilled lime soda â€” sweet, salt, or both. The ultimate Bangalore thirst quencher.', isVeg: true, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
     ]
   },
 
   "8": {
-    info: { name: "Nandhana Palace", cuisines: "South Indian, Andhra, Biryani", rating: "4.4", deliveryTime: "35 mins", costForTwo: "₹600 for two", location: "Jayanagar, Bangalore" },
-    coverImage: 'https://images.pexels.com/photos/12737713/pexels-photo-12737713.jpeg?auto=compress&cs=tinysrgb&w=800',
+    info: { name: "Nandhana Palace", cuisines: "South Indian, Andhra, Biryani", rating: "4.4", deliveryTime: "35 mins", costForTwo: "â‚¹600 for two", location: "Jayanagar, Bangalore" },
+    coverImage: 'https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=400&auto=format&fit=crop',
     menus: [
       { category: "Signature Biryani", items: [
-        { id: 'np1', name: 'Nandhana Chicken Biryani', price: 320, desc: 'Dum-cooked Andhra style biryani with whole spices, mint and slow-cooked chicken.', isVeg: false, isBestSeller: true,  image: 'https://images.pexels.com/photos/7353380/pexels-photo-7353380.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'np2', name: 'Prawn Biryani',            price: 380, desc: 'Succulent tiger prawns layered with saffron basmati and coastal spices.', isVeg: false, isBestSeller: false, image: 'https://images.pexels.com/photos/12737713/pexels-photo-12737713.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'np3', name: 'Veg Dum Biryani',          price: 240, desc: 'Mixed vegetables and paneer dum-cooked with basmati rice and whole spices.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/9609836/pexels-photo-9609836.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'np1', name: 'Nandhana Chicken Biryani', price: 320, desc: 'Dum-cooked Andhra style biryani with whole spices, mint and slow-cooked chicken.', isVeg: false, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop' },
+        { id: 'np2', name: 'Prawn Biryani',            price: 380, desc: 'Succulent tiger prawns layered with saffron basmati and coastal spices.', isVeg: false, isBestSeller: false, image: 'https://images.unsplash.com/photo-1574653853027-5382a3d23a15?w=400&auto=format&fit=crop' },
+        { id: 'np3', name: 'Veg Dum Biryani',          price: 240, desc: 'Mixed vegetables and paneer dum-cooked with basmati rice and whole spices.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400&auto=format&fit=crop' },
       ]},
       { category: "Andhra Curries", items: [
-        { id: 'np4', name: 'Gongura Mutton Curry', price: 360, desc: 'Andhra signature — tender mutton cooked in tangy, fiery gongura (sorrel) leaves gravy.', isVeg: false, isBestSeller: true,  image: 'https://images.pexels.com/photos/9609814/pexels-photo-9609814.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'np5', name: 'Chicken Chettinad',    price: 320, desc: 'Aromatic Tamil Nadu style chicken curry with freshly ground Chettinad spice paste.', isVeg: false, isBestSeller: false, image: 'https://images.pexels.com/photos/2313686/pexels-photo-2313686.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'np6', name: 'Pesarattu Curry',      price: 180, desc: 'Andhra style green moong dal gravy with ginger and green chillies.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/674574/pexels-photo-674574.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'np4', name: 'Gongura Mutton Curry', price: 360, desc: 'Andhra signature â€” tender mutton cooked in tangy, fiery gongura (sorrel) leaves gravy.', isVeg: false, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'np5', name: 'Chicken Chettinad',    price: 320, desc: 'Aromatic Tamil Nadu style chicken curry with freshly ground Chettinad spice paste.', isVeg: false, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'np6', name: 'Pesarattu Curry',      price: 180, desc: 'Andhra style green moong dal gravy with ginger and green chillies.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
       { category: "South Indian Thali", items: [
-        { id: 'np7', name: 'Andhra Meals (Full)',  price: 200, desc: 'Unlimited rice, sambar, 3 curries, rasam, curd, papad, pickle and payasam.', isVeg: false, isBestSeller: false, image: 'https://images.pexels.com/photos/674574/pexels-photo-674574.jpeg?auto=compress&cs=tinysrgb&w=400' },
-        { id: 'np8', name: 'Veg Thali',           price: 160, desc: 'Rice, sambar, kootu, poriyal, papadam, pickle and sweet — wholesome and filling.', isVeg: true,  isBestSeller: false, image: 'https://images.pexels.com/photos/674574/pexels-photo-674574.jpeg?auto=compress&cs=tinysrgb&w=400' },
+        { id: 'np7', name: 'Andhra Meals (Full)',  price: 200, desc: 'Unlimited rice, sambar, 3 curries, rasam, curd, papad, pickle and payasam.', isVeg: false, isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
+        { id: 'np8', name: 'Veg Thali',           price: 160, desc: 'Rice, sambar, kootu, poriyal, papadam, pickle and sweet â€” wholesome and filling.', isVeg: true,  isBestSeller: false, image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop' },
       ]},
     ]
   },
@@ -227,7 +227,7 @@ const RestaurantDetailPage = () => {
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">{info.name}</h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{info.cuisines}</p>
-              <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">📍 {info.location}</p>
+              <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">ðŸ“ {info.location}</p>
             </div>
             <div className="bg-green-600 text-white px-3 py-1.5 rounded-xl flex items-center gap-1 shrink-0">
               <HiStar className="w-4 h-4" />
@@ -253,7 +253,7 @@ const RestaurantDetailPage = () => {
               className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all capitalize ${
                 activeTab === tab ? 'bg-[#ff5200] text-white shadow-md' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}>
-              {tab === 'menu' ? '🍽 Menu' : '⭐ Reviews'}
+              {tab === 'menu' ? 'ðŸ½ Menu' : 'â­ Reviews'}
             </button>
           ))}
         </div>
@@ -266,7 +266,7 @@ const RestaurantDetailPage = () => {
               <div className="relative flex-1">
                 <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                  placeholder="Search menu…" className="input-base pl-9 h-10 text-sm" />
+                  placeholder="Search menuâ€¦" className="input-base pl-9 h-10 text-sm" />
               </div>
               <button onClick={() => setVegOnly(v => !v)}
                 className={`shrink-0 px-4 h-10 rounded-xl border-2 text-sm font-semibold transition-all ${
@@ -274,7 +274,7 @@ const RestaurantDetailPage = () => {
                     ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-600'
                     : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-green-400'
                 }`}>
-                🌿 Veg
+                ðŸŒ¿ Veg
               </button>
             </div>
 
@@ -310,10 +310,10 @@ const RestaurantDetailPage = () => {
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 <h3 className="font-bold text-gray-900 dark:text-white text-sm">{item.name}</h3>
                                 {item.isBestSeller && (
-                                  <span className="badge badge-orange text-[10px]">⭐ Bestseller</span>
+                                  <span className="badge badge-orange text-[10px]">â­ Bestseller</span>
                                 )}
                               </div>
-                              <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1.5">₹{item.price}</p>
+                              <p className="font-semibold text-gray-800 dark:text-gray-200 mb-1.5">â‚¹{item.price}</p>
                               <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2">{item.desc}</p>
                             </div>
 
@@ -322,7 +322,7 @@ const RestaurantDetailPage = () => {
                               <img src={item.image} alt={item.name}
                                 className="w-full h-full object-cover rounded-xl"
                                 loading="lazy"
-                                onError={e => { e.target.src = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400'; }} />
+                                onError={e => { e.target.src = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&auto=format&fit=crop'; }} />
 
                               <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-24">
                                 {qty === 0 ? (
@@ -333,7 +333,7 @@ const RestaurantDetailPage = () => {
                                 ) : (
                                   <div className="flex items-center justify-between bg-[#ff5200] rounded-lg shadow-md overflow-hidden">
                                     <button onClick={() => handleRemove(item)}
-                                      className="text-white font-black text-lg px-2.5 py-1.5 hover:bg-orange-600 transition-colors">−</button>
+                                      className="text-white font-black text-lg px-2.5 py-1.5 hover:bg-orange-600 transition-colors">âˆ’</button>
                                     <span className="text-white font-black text-sm">{qty}</span>
                                     <button onClick={() => handleAdd(item)}
                                       className="text-white font-black text-lg px-2.5 py-1.5 hover:bg-orange-600 transition-colors">+</button>
@@ -350,7 +350,7 @@ const RestaurantDetailPage = () => {
 
                 {filteredMenus.length === 0 && (
                   <div className="text-center py-16">
-                    <div className="text-5xl mb-4">🔍</div>
+                    <div className="text-5xl mb-4">ðŸ”</div>
                     <p className="font-bold text-gray-700 dark:text-gray-200">No items match your search</p>
                     <button onClick={() => { setSearchQuery(''); setVegOnly(false); }}
                       className="btn-outline mt-4 px-6 py-2 text-sm">
@@ -402,3 +402,4 @@ const RestaurantDetailPage = () => {
 };
 
 export default RestaurantDetailPage;
+
