@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { HiStar, HiClock, HiOutlineCurrencyRupee } from 'react-icons/hi';
 
 const CUISINE_COLORS = {
@@ -25,7 +25,7 @@ const RestaurantCard = ({ restaurant }) => {
   const cuisineList = Array.isArray(cuisines) ? cuisines.join(', ') : cuisines;
   const tagColor = cuisines?.[0] ? (CUISINE_COLORS[cuisines[0]] || CUISINE_COLORS.default) : CUISINE_COLORS.default;
 
-  const fallbackImage = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=600';
+  const fallbackImage = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop';
 
   return (
     <Link to={`/restaurant/${restaurantId}`} className="block group">
@@ -52,7 +52,7 @@ const RestaurantCard = ({ restaurant }) => {
           {/* Tags row */}
           <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
             {isPureVeg && (
-              <span className="badge badge-green text-[10px]">🌿 Pure Veg</span>
+              <span className="badge badge-green text-[10px]">ðŸŒ¿ Pure Veg</span>
             )}
             {tags.slice(0, 2).map(tag => (
               <span key={tag} className="badge badge-orange text-[10px]">{tag}</span>
@@ -94,7 +94,7 @@ const RestaurantCard = ({ restaurant }) => {
             </div>
             <div className="flex items-center gap-0.5">
               <HiOutlineCurrencyRupee className="w-3.5 h-3.5" />
-              <span className="font-medium">₹{costForTwo || 400} for two</span>
+              <span className="font-medium">â‚¹{costForTwo || 400} for two</span>
             </div>
           </div>
         </div>
@@ -104,3 +104,4 @@ const RestaurantCard = ({ restaurant }) => {
 };
 
 export default RestaurantCard;
+

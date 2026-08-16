@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { HiOutlineArrowRight, HiOutlineSparkles, HiStar, HiClock, HiShieldCheck, HiLightningBolt } from 'react-icons/hi';
@@ -28,11 +28,11 @@ const MOCK_RESTAURANTS = [
   {
     id: '4', name: 'Corner House Ice Cream', cuisines: ['Desserts', 'Ice Cream'],
     rating: 4.8, deliveryTime: '20 mins', costForTwo: 400,
-    coverImage: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=600',
+    coverImage: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=600&auto=format&fit=crop',
     tags: ['Top Rated'], isPureVeg: true, deliveryFee: 0,
   },
   {
-    id: '5', name: 'A2B — Adyar Ananda Bhavan', cuisines: ['South Indian', 'Sweets'],
+    id: '5', name: 'A2B â€” Adyar Ananda Bhavan', cuisines: ['South Indian', 'Sweets'],
     rating: 4.3, deliveryTime: '30 mins', costForTwo: 300,
     coverImage: 'https://images.pexels.com/photos/5560763/pexels-photo-5560763.jpeg?auto=compress&cs=tinysrgb&w=600',
     tags: ['Pure Veg'], isPureVeg: true, deliveryFee: 30,
@@ -58,21 +58,21 @@ const MOCK_RESTAURANTS = [
 ];
 
 const CUISINE_ITEMS = [
-  { emoji: '🍔', label: 'Burgers' },
-  { emoji: '🍕', label: 'Pizza' },
-  { emoji: '🫓', label: 'South Indian' },
-  { emoji: '🍛', label: 'Biryani' },
-  { emoji: '🥗', label: 'Healthy' },
-  { emoji: '🍜', label: 'Chinese' },
-  { emoji: '🌮', label: 'Mexican' },
-  { emoji: '🍰', label: 'Desserts' },
-  { emoji: '🍗', label: 'Andhra' },
-  { emoji: '☕', label: 'Cafe' },
+  { emoji: 'ðŸ”', label: 'Burgers' },
+  { emoji: 'ðŸ•', label: 'Pizza' },
+  { emoji: 'ðŸ«“', label: 'South Indian' },
+  { emoji: 'ðŸ›', label: 'Biryani' },
+  { emoji: 'ðŸ¥—', label: 'Healthy' },
+  { emoji: 'ðŸœ', label: 'Chinese' },
+  { emoji: 'ðŸŒ®', label: 'Mexican' },
+  { emoji: 'ðŸ°', label: 'Desserts' },
+  { emoji: 'ðŸ—', label: 'Andhra' },
+  { emoji: 'â˜•', label: 'Cafe' },
 ];
 
 const STATS = [
   { icon: <HiShieldCheck className="w-6 h-6" />, label: '100% Safe', sub: 'Hygiene certified' },
-  { icon: <HiLightningBolt className="w-6 h-6" />, label: '30 Min Delivery', sub: 'Or we refund ₹50' },
+  { icon: <HiLightningBolt className="w-6 h-6" />, label: '30 Min Delivery', sub: 'Or we refund â‚¹50' },
   { icon: <HiStar className="w-6 h-6" />, label: '50,000+ Dishes', sub: 'From 1,200 restaurants' },
   { icon: <HiClock className="w-6 h-6" />, label: '24/7 Support', sub: 'Always here for you' },
 ];
@@ -96,7 +96,7 @@ const HomePage = () => {
 
   return (
     <div className="w-full">
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="relative gradient-hero dark:bg-gray-900 overflow-hidden min-h-[85vh] flex items-center">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-200/30 dark:bg-orange-900/20 rounded-full blur-3xl -mr-40 -mt-40" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-yellow-100/30 dark:bg-yellow-900/10 rounded-full blur-3xl -ml-40 -mb-40" />
@@ -124,12 +124,12 @@ const HomePage = () => {
               {/* Search bar */}
               <div className="flex gap-3 bg-white dark:bg-gray-800 p-2 rounded-2xl shadow-xl max-w-md">
                 <div className="flex-1 flex items-center gap-2 px-3">
-                  <span className="text-xl">📍</span>
+                  <span className="text-xl">ðŸ“</span>
                   <input
                     type="text"
                     value={searchInput}
                     onChange={e => setSearchInput(e.target.value)}
-                    placeholder="Enter your delivery location…"
+                    placeholder="Enter your delivery locationâ€¦"
                     className="flex-1 bg-transparent text-sm text-gray-700 dark:text-gray-200 outline-none placeholder-gray-400"
                   />
                 </div>
@@ -142,13 +142,13 @@ const HomePage = () => {
               <div className="flex items-center gap-4">
                 <div className="flex -space-x-3">
                   {[11, 12, 13, 14].map(i => (
-                    <img key={i} src={`https://i.pravatar.cc/100?img=${i}`} alt=""
+                    <img key={i} src={`https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop`} alt=""
                       className="w-10 h-10 rounded-full border-2 border-white object-cover" />
                   ))}
                 </div>
                 <div>
                   <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map(i => <span key={i} className="text-yellow-400 text-xs">★</span>)}
+                    {[1, 2, 3, 4, 5].map(i => <span key={i} className="text-yellow-400 text-xs">â˜…</span>)}
                     <span className="text-sm font-bold text-gray-800 dark:text-white ml-1">4.9</span>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Loved by 2M+ customers</p>
@@ -160,15 +160,15 @@ const HomePage = () => {
             <div className="relative hidden lg:block animate-slide-up">
               <div className="absolute inset-0 bg-gradient-to-br from-[#ff5200]/20 to-transparent rounded-[3rem] blur-3xl scale-110" />
               <img
-                src="https://images.pexels.com/photos/1565982/pexels-photo-1565982.jpeg?auto=compress&cs=tinysrgb&w=800"
+                src="https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&auto=format&fit=crop"
                 alt="Delicious South Indian food"
                 className="relative z-10 w-full h-[520px] object-cover rounded-[2.5rem] shadow-2xl animate-float"
               />
               <div className="absolute -bottom-6 -left-8 glassmorphism p-4 z-20 flex items-center gap-3 animate-bounce-in">
-                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xl">✅</div>
+                <div className="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xl">âœ…</div>
                 <div>
                   <p className="text-sm font-black text-gray-900 dark:text-white">Order Delivered!</p>
-                  <p className="text-xs text-gray-500">28 mins • 5⭐</p>
+                  <p className="text-xs text-gray-500">28 mins â€¢ 5â­</p>
                 </div>
               </div>
               <div className="absolute -top-4 -right-4 glassmorphism p-3 z-20 text-center animate-bounce-in stagger-2">
@@ -180,7 +180,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ── Stats Bar ──────────────────────────────────────────────────────── */}
+      {/* â”€â”€ Stats Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -199,12 +199,12 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ── Offers Banner ──────────────────────────────────────────────────── */}
+      {/* â”€â”€ Offers Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <OfferBanner />
       </section>
 
-      {/* ── Cuisine Explorer ───────────────────────────────────────────────── */}
+      {/* â”€â”€ Cuisine Explorer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
         <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-6">What's on your mind?</h2>
         <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2">
@@ -224,7 +224,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* ── Restaurant Grid ────────────────────────────────────────────────── */}
+      {/* â”€â”€ Restaurant Grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-black text-gray-900 dark:text-white">
@@ -249,7 +249,7 @@ const HomePage = () => {
 
         {!loading && filteredRestaurants.length === 0 && (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">🍽</div>
+            <div className="text-6xl mb-4">ðŸ½</div>
             <p className="text-xl font-bold text-gray-700 dark:text-gray-200">No restaurants found</p>
             <p className="text-gray-400 mt-1">Try a different cuisine</p>
             <button onClick={() => setSelectedCuisine('')} className="btn-primary mt-5 px-8 py-2.5 text-sm">
@@ -263,3 +263,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
