@@ -65,7 +65,7 @@ const RESTAURANT_DATA = {
 
   "4": {
     info: { name: "Corner House Ice Cream", cuisines: "Desserts, Ice Cream, Shakes", rating: "4.8", deliveryTime: "20 mins", costForTwo: "₹400 for two", location: "Jayanagar, Bangalore" },
-    coverImage: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=800&auto=format&fit=crop',
+    coverImage: 'https://en.wikipedia.org/wiki/Ice_cream_parlor#/media/File:Venice_-_Ice_cream_parlor_-_4017.jpg',
     menus: [
       { category: "Signature Sundaes", items: [
         { id: 'c1', name: 'Death by Chocolate',   price: 290, desc: 'Dark chocolate cake, chocolate ice cream, chocolate sauce, cherries and peanuts.', isVeg: true, isBestSeller: true,  image: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400&auto=format&fit=crop' },
