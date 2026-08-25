@@ -1,46 +1,111 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HiPlus, HiPencil, HiTrash, HiCheck, HiX, HiEye, HiClock, HiCurrencyRupee } from 'react-icons/hi';
+import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../api/client';
+import axios from 'axios';
 
 const DEMO_MENU = [
-  { id: 1, category: 'Biryani', name: 'Chicken Boneless Biryani', price: 345, isVeg: false, isAvailable: true, image: 'https://images.pexels.com/photos/7353380/pexels-photo-7353380.jpeg?auto=compress&cs=tinysrgb&w=200', isBestSeller: true },
-  { id: 2, category: 'Biryani', name: 'Mutton Biryani', price: 420, isVeg: false, isAvailable: true, image: 'https://images.pexels.com/photos/7353380/pexels-photo-7353380.jpeg?auto=compress&cs=tinysrgb&w=200', isBestSeller: false },
-  { id: 3, category: 'Starters', name: 'Guntur Chicken Dry', price: 280, isVeg: false, isAvailable: false, image: 'https://images.pexels.com/photos/604969/pexels-photo-604969.jpeg?auto=compress&cs=tinysrgb&w=200', isBestSeller: true },
-  { id: 4, category: 'Starters', name: 'Chilli Paneer', price: 240, isVeg: true, isAvailable: true, image: 'https://images.pexels.com/photos/2411558/pexels-photo-2411558.jpeg?auto=compress&cs=tinysrgb&w=200', isBestSeller: false },
+  { id: '1', category: 'Biryani', name: 'Special Chicken Boneless Biryani', price: 345, isVeg: false, isAvailable: true, image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop', isBestSeller: true },
+  { id: '2', category: 'Biryani', name: 'Hyderabadi Mutton Dum Biryani', price: 420, isVeg: false, isAvailable: true, image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300&auto=format&fit=crop', isBestSeller: false },
+  { id: '3', category: 'Starters', name: 'Guntur Chicken Fry (Dry)', price: 280, isVeg: false, isAvailable: true, image: 'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=300&auto=format&fit=crop', isBestSeller: true },
+  { id: '4', category: 'Starters', name: 'Chilli Paneer Dry', price: 240, isVeg: true, isAvailable: true, image: 'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=300&auto=format&fit=crop', isBestSeller: false },
 ];
 
 const DEMO_ORDERS = [
-  { id: 'ORD001', user: 'Priya S.', items: [{ name: 'Chicken Biryani', qty: 2 }], total: 785, status: 'pending', time: '10:32 AM' },
-  { id: 'ORD002', user: 'Rahul V.', items: [{ name: 'Guntur Chicken', qty: 1 }], total: 280, status: 'preparing', time: '10:25 AM' },
-  { id: 'ORD003', user: 'Ananya K.', items: [{ name: 'Mutton Biryani', qty: 1 }, { name: 'Chilli Paneer', qty: 1 }], total: 660, status: 'ready', time: '10:15 AM' },
+  { id: 'ORD001', user: 'Priya S.', items: [{ name: 'Chicken Biryani', qty: 2 }], total: 785, status: 'pending', time: 'Just now' },
+  { id: 'ORD002', user: 'Rahul V.', items: [{ name: 'Guntur Chicken', qty: 1 }], total: 280, status: 'preparing', time: '10 mins ago' },
+  { id: 'ORD003', user: 'Ananya K.', items: [{ name: 'Mutton Biryani', qty: 1 }, { name: 'Chilli Paneer', qty: 1 }], total: 660, status: 'ready', time: '20 mins ago' },
 ];
 
 const RestaurantDashboard = () => {
+  const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState('orders');
   const [menu, setMenu] = useState(DEMO_MENU);
   const [orders, setOrders] = useState(DEMO_ORDERS);
+  const [restaurantName, setRestaurantName] = useState('Meghana Foods');
   const [showAddItem, setShowAddItem] = useState(false);
   const [newItem, setNewItem] = useState({ name: '', category: '', price: '', isVeg: false });
 
+  // Fetch restaurant owner data from API
+  useEffect(() => {
+    const fetchRestoData = async () => {
+      if (!token) return;
+      try {
+        const res = await axios.get(`${API_BASE_URL}/restaurants/owner/mine`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 3000,
+        });
+        if (res.data?.success && res.data.restaurants?.length > 0) {
+          const myResto = res.data.restaurants[0];
+          setRestaurantName(myResto.name);
+
+          // Fetch orders for this restaurant
+          const ordersRes = await axios.get(`${API_BASE_URL}/orders/restaurant/${myResto._id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 3000,
+          });
+          if (ordersRes.data?.success && ordersRes.data.orders?.length > 0) {
+            const mappedOrders = ordersRes.data.orders.map(o => ({
+              id: o._id,
+              user: o.user?.name || 'Customer',
+              items: o.items || [],
+              total: o.total,
+              status: o.status,
+              time: new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            }));
+            setOrders(mappedOrders);
+          }
+
+          // Fetch menu for this restaurant
+          const menuRes = await axios.get(`${API_BASE_URL}/menu/${myResto._id}`, { timeout: 3000 });
+          if (menuRes.data?.success && menuRes.data.items?.length > 0) {
+            setMenu(menuRes.data.items);
+          }
+        }
+      } catch {
+        // Fallback to local demo data
+      }
+    };
+
+    fetchRestoData();
+  }, [token]);
+
   const toggleAvailability = (id) => {
-    setMenu(prev => prev.map(item => item.id === id ? { ...item, isAvailable: !item.isAvailable } : item));
+    setMenu(prev => prev.map(item => item.id === id || item._id === id ? { ...item, isAvailable: !item.isAvailable } : item));
   };
 
-  const removeItem = (id) => setMenu(prev => prev.filter(item => item.id !== id));
+  const removeItem = (id) => setMenu(prev => prev.filter(item => item.id !== id && item._id !== id));
 
-  const updateOrderStatus = (id, status) => {
+  const updateOrderStatus = async (id, status) => {
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    try {
+      if (token && !id.startsWith('ORD')) {
+        await axios.put(`${API_BASE_URL}/orders/${id}/status`, { status }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch {
+      // Local state already updated
+    }
   };
 
   const addItem = () => {
     if (!newItem.name || !newItem.price) return;
-    setMenu(prev => [...prev, { ...newItem, id: Date.now(), price: +newItem.price, isAvailable: true, image: '', isBestSeller: false }]);
+    setMenu(prev => [...prev, {
+      ...newItem,
+      id: `item_${Date.now()}`,
+      price: +newItem.price,
+      isAvailable: true,
+      image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&auto=format&fit=crop',
+      isBestSeller: false
+    }]);
     setNewItem({ name: '', category: '', price: '', isVeg: false });
     setShowAddItem(false);
   };
 
   const STATUS_NEXT = { pending: 'confirmed', confirmed: 'preparing', preparing: 'ready', ready: 'picked_up' };
   const STATUS_LABEL_NEXT = { pending: 'Accept', confirmed: 'Start Preparing', preparing: 'Mark Ready', ready: 'Handover' };
-  const STATUS_COLOR = { pending: 'badge-orange', confirmed: 'badge-blue', preparing: 'badge-orange', ready: 'badge-green' };
+  const STATUS_COLOR = { pending: 'badge-orange', confirmed: 'badge-blue', preparing: 'badge-orange', ready: 'badge-green', picked_up: 'badge-blue', delivered: 'badge-green' };
 
   const todayRevenue = orders.filter(o => ['ready', 'picked_up', 'delivered'].includes(o.status)).reduce((s, o) => s + o.total, 0);
 
@@ -52,7 +117,7 @@ const RestaurantDashboard = () => {
           <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">🏪</div>
           <div>
             <h1 className="text-2xl font-black text-gray-900 dark:text-white">Restaurant Dashboard</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Meghana Foods — Today's Revenue: <span className="font-bold text-green-600">₹{todayRevenue}</span></p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{restaurantName} — Active Revenue: <span className="font-bold text-green-600">₹{todayRevenue}</span></p>
           </div>
         </div>
 
@@ -88,8 +153,8 @@ const RestaurantDashboard = () => {
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="font-black text-gray-900 dark:text-white">#{order.id}</span>
-                      <span className={`badge ${STATUS_COLOR[order.status]}`}>{order.status}</span>
+                      <span className="font-black text-gray-900 dark:text-white">#{order.id?.slice?.(-6) || order.id}</span>
+                      <span className={`badge ${STATUS_COLOR[order.status] || 'badge-blue'}`}>{order.status}</span>
                     </div>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{order.user} · {order.time}</p>
                     <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
@@ -106,10 +171,12 @@ const RestaurantDashboard = () => {
                       <HiCheck className="w-4 h-4" /> {STATUS_LABEL_NEXT[order.status]}
                     </button>
                   )}
-                  <button onClick={() => updateOrderStatus(order.id, 'cancelled')}
-                    className="flex items-center justify-center gap-1.5 px-4 py-2 border-2 border-red-200 text-red-500 text-sm font-bold rounded-xl hover:bg-red-50 transition-colors">
-                    <HiX className="w-4 h-4" /> Cancel
-                  </button>
+                  {['pending', 'confirmed'].includes(order.status) && (
+                    <button onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                      className="flex items-center justify-center gap-1.5 px-4 py-2 border-2 border-red-200 text-red-500 text-sm font-bold rounded-xl hover:bg-red-50 transition-colors">
+                      <HiX className="w-4 h-4" /> Cancel
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -154,7 +221,7 @@ const RestaurantDashboard = () => {
             {/* Menu list */}
             <div className="space-y-3">
               {menu.map(item => (
-                <div key={item.id} className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex items-center gap-4 ${!item.isAvailable ? 'opacity-60' : ''}`}>
+                <div key={item.id || item._id} className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex items-center gap-4 ${!item.isAvailable ? 'opacity-60' : ''}`}>
                   {item.image && (
                     <img src={item.image} alt={item.name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
                   )}
@@ -162,21 +229,18 @@ const RestaurantDashboard = () => {
                     <div className="flex items-center gap-2">
                       <div className={item.isVeg ? 'veg-dot' : 'nonveg-dot'} />
                       <span className="font-bold text-gray-900 dark:text-white text-sm truncate">{item.name}</span>
-                      {item.isBestSeller && <span className="badge badge-orange text-[10px]">⭐</span>}
+                      {item.isBestSeller && <span className="badge badge-orange text-[10px]">⭐ Bestseller</span>}
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">{item.category}</p>
                     <p className="font-bold text-[#ff5200] text-sm mt-1">₹{item.price}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {/* Toggle availability */}
-                    <button onClick={() => toggleAvailability(item.id)}
+                    <button onClick={() => toggleAvailability(item.id || item._id)}
                       className={`w-10 h-5 rounded-full transition-all relative ${item.isAvailable ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
                       <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${item.isAvailable ? 'left-5' : 'left-0.5'}`} />
                     </button>
-                    <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#ff5200] transition-colors">
-                      <HiPencil className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => removeItem(item.id)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
+                    <button onClick={() => removeItem(item.id || item._id)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
                       <HiTrash className="w-4 h-4" />
                     </button>
                   </div>

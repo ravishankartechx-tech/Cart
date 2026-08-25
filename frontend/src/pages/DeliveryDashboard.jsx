@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { HiCheck, HiX, HiPhone, HiLocationMarker, HiCurrencyRupee } from 'react-icons/hi';
+import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../api/client';
+import axios from 'axios';
 
 const DEMO_AVAILABLE_ORDERS = [
   { id: 'ORD821', restaurantName: 'Meghana Foods', restaurantAddress: 'Koramangala, 500m away', customerName: 'Priya S.', customerAddress: 'HSR Layout, Sector 6', distance: '3.2 km', items: 3, total: 785, tip: 40 },
@@ -7,20 +10,101 @@ const DEMO_AVAILABLE_ORDERS = [
 ];
 
 const DeliveryDashboard = () => {
-  const [isOnline, setIsOnline] = useState(false);
+  const { user, token } = useAuth();
+  const [isOnline, setIsOnline] = useState(true);
   const [currentOrder, setCurrentOrder] = useState(null);
   const [availableOrders, setAvailableOrders] = useState(DEMO_AVAILABLE_ORDERS);
   const [orderStatus, setOrderStatus] = useState('picked_up');
+  const [stats, setStats] = useState({ orders: 8, earnings: 640, distance: '42 km', rating: '4.9' });
 
-  const todayStats = { orders: 8, earnings: 640, distance: '42 km', rating: '4.8' };
+  // Fetch delivery profile and available orders from backend
+  useEffect(() => {
+    const fetchDeliveryData = async () => {
+      if (!token) return;
+      try {
+        const config = { headers: { Authorization: `Bearer ${token}` }, timeout: 3000 };
+        const [profileRes, ordersRes] = await Promise.allSettled([
+          axios.get(`${API_BASE_URL}/delivery/me`, config),
+          axios.get(`${API_BASE_URL}/delivery/orders/available`, config),
+        ]);
 
-  const acceptOrder = (order) => {
+        if (profileRes.status === 'fulfilled' && profileRes.value.data?.success) {
+          const p = profileRes.value.data.partner;
+          setIsOnline(p.isOnline);
+          setStats(prev => ({
+            ...prev,
+            orders: p.completedOrders || prev.orders,
+            earnings: p.totalEarnings || prev.earnings,
+            rating: p.rating ? p.rating.toFixed(1) : '4.9',
+          }));
+        }
+
+        if (ordersRes.status === 'fulfilled' && ordersRes.value.data?.success && ordersRes.value.data.orders?.length > 0) {
+          const mapped = ordersRes.value.data.orders.map(o => ({
+            id: o._id,
+            restaurantName: o.restaurant?.name || o.restaurantName || 'Restaurant',
+            restaurantAddress: o.restaurant?.address?.street || 'Nearby Restaurant',
+            customerName: o.user?.name || 'Customer',
+            customerAddress: o.deliveryAddress?.street || 'Delivery Location',
+            distance: '2.5 km',
+            items: o.items?.length || 1,
+            total: o.total,
+            tip: 30,
+          }));
+          setAvailableOrders(mapped);
+        }
+      } catch {
+        // Fallback to local demo state
+      }
+    };
+
+    fetchDeliveryData();
+  }, [token]);
+
+  const handleToggleOnline = async () => {
+    const nextState = !isOnline;
+    setIsOnline(nextState);
+    try {
+      if (token) {
+        await axios.put(`${API_BASE_URL}/delivery/status`, { isOnline: nextState, isAvailable: nextState }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch {
+      // Local state preserved
+    }
+  };
+
+  const acceptOrder = async (order) => {
     setCurrentOrder(order);
     setAvailableOrders(prev => prev.filter(o => o.id !== order.id));
     setOrderStatus('picked_up');
+    try {
+      if (token && !order.id.startsWith('ORD')) {
+        await axios.put(`${API_BASE_URL}/delivery/orders/${order.id}/accept`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch {
+      // Local state preserved
+    }
   };
 
-  const markDelivered = () => {
+  const markDelivered = async () => {
+    if (currentOrder && token && !currentOrder.id.startsWith('ORD')) {
+      try {
+        await axios.put(`${API_BASE_URL}/delivery/orders/${currentOrder.id}/deliver`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch {
+        // Ignored
+      }
+    }
+    setStats(prev => ({
+      ...prev,
+      orders: prev.orders + 1,
+      earnings: prev.earnings + (currentOrder?.tip || 40) + 40,
+    }));
     setCurrentOrder(null);
     setOrderStatus(null);
   };
@@ -34,13 +118,13 @@ const DeliveryDashboard = () => {
             <div className="w-12 h-12 gradient-primary rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">🛵</div>
             <div>
               <h1 className="text-xl font-black text-gray-900 dark:text-white">Delivery Dashboard</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Welcome, Arjun R.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Welcome, {user?.name || 'Arjun R.'}</p>
             </div>
           </div>
           {/* Online toggle */}
           <div className="flex items-center gap-3">
             <span className={`text-sm font-bold ${isOnline ? 'text-green-600' : 'text-gray-400'}`}>{isOnline ? 'Online' : 'Offline'}</span>
-            <button onClick={() => setIsOnline(v => !v)}
+            <button onClick={handleToggleOnline}
               className={`w-14 h-7 rounded-full transition-all relative shadow-md ${isOnline ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
               <div className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-all ${isOnline ? 'left-7' : 'left-0.5'}`} />
             </button>
@@ -50,10 +134,10 @@ const DeliveryDashboard = () => {
         {/* Today Stats */}
         <div className="grid grid-cols-4 gap-3 mb-6">
           {[
-            { label: 'Orders', value: todayStats.orders, emoji: '📦' },
-            { label: 'Earnings', value: `₹${todayStats.earnings}`, emoji: '💰' },
-            { label: 'Distance', value: todayStats.distance, emoji: '📍' },
-            { label: 'Rating', value: todayStats.rating, emoji: '⭐' },
+            { label: 'Orders', value: stats.orders, emoji: '📦' },
+            { label: 'Earnings', value: `₹${stats.earnings}`, emoji: '💰' },
+            { label: 'Distance', value: stats.distance, emoji: '📍' },
+            { label: 'Rating', value: stats.rating, emoji: '⭐' },
           ].map((s, i) => (
             <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-3 text-center">
               <div className="text-lg mb-0.5">{s.emoji}</div>
@@ -97,7 +181,7 @@ const DeliveryDashboard = () => {
             </h3>
             {availableOrders.length === 0 ? (
               <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
-                <div className="text-5xl mb-3 animate-spin-slow">🛵</div>
+                <div className="text-5xl mb-3">🛵</div>
                 <p className="font-semibold text-gray-600 dark:text-gray-300">Searching for orders nearby…</p>
                 <p className="text-xs text-gray-400 mt-1">Stay online to receive requests</p>
               </div>

@@ -10,16 +10,17 @@ const roleMiddleware = require('../middleware/role');
 // @access Private
 router.post('/', authMiddleware, async (req, res) => {
   try {
-    const { restaurantId, restaurantName, items, deliveryAddress, paymentMethod, couponCode, specialInstructions } = req.body;
+    const { restaurantId, restaurantName, items, deliveryAddress, paymentMethod, couponCode, specialInstructions, discount: reqDiscount } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: 'Order must have at least one item.' });
     }
 
     const subtotal = items.reduce((acc, i) => acc + i.price * i.qty, 0);
-    const deliveryFee = 40;
+    const deliveryFee = subtotal > 0 ? (req.body.deliveryFee !== undefined ? Number(req.body.deliveryFee) : 40) : 0;
+    const discount = Number(reqDiscount) || 0;
     const taxes = Math.round(subtotal * 0.05);
-    const total = subtotal + deliveryFee + taxes;
+    const total = Math.max(0, subtotal + deliveryFee + taxes - discount);
 
     const estimatedDelivery = new Date(Date.now() + 35 * 60 * 1000); // 35 mins from now
 
@@ -30,12 +31,13 @@ router.post('/', authMiddleware, async (req, res) => {
       items,
       subtotal,
       deliveryFee,
+      discount,
       taxes,
       total,
       couponCode,
       deliveryAddress,
       paymentMethod: paymentMethod || 'cod',
-      paymentStatus: paymentMethod === 'cod' ? 'pending' : 'pending',
+      paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
       estimatedDelivery,
       specialInstructions,
     });
@@ -72,6 +74,10 @@ router.get('/history', authMiddleware, async (req, res) => {
 // @access Private
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+
     const order = await Order.findById(req.params.id)
       .populate('restaurant', 'name coverImage address')
       .populate('deliveryPartner', 'name phone photoURL')
@@ -101,6 +107,10 @@ router.put('/:id/status', authMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid status.' });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
 
@@ -124,7 +134,11 @@ router.put('/:id/status', authMiddleware, async (req, res) => {
 // @access Private - restaurant/admin
 router.get('/restaurant/:restaurantId', authMiddleware, roleMiddleware('restaurant', 'admin'), async (req, res) => {
   try {
-    const orders = await Order.find({ restaurant: req.params.restaurantId })
+    const filter = mongoose.Types.ObjectId.isValid(req.params.restaurantId)
+      ? { restaurant: req.params.restaurantId }
+      : { restaurantName: { $regex: req.params.restaurantId, $options: 'i' } };
+
+    const orders = await Order.find(filter)
       .sort({ createdAt: -1 })
       .populate('user', 'name phone')
       .lean();
@@ -140,6 +154,9 @@ router.get('/restaurant/:restaurantId', authMiddleware, roleMiddleware('restaura
 router.put('/:id/rate', authMiddleware, async (req, res) => {
   try {
     const { rating, review } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
     const order = await Order.findById(req.params.id);
 
     if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });

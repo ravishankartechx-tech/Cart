@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { HiStar, HiClock, HiOutlineCurrencyRupee, HiArrowLeft, HiSearch } from 'react-icons/hi';
@@ -159,6 +159,9 @@ const RESTAURANT_DATA = {
   },
 };
 
+import { API_BASE_URL } from '../api/client';
+import axios from 'axios';
+
 const DEMO_REVIEWS = [
   { user: { name: 'Priya Sharma' }, rating: 5, foodRating: 5, deliveryRating: 4, comment: 'Absolutely amazing! The food was perfectly cooked and arrived piping hot. Will definitely order again!', isVerified: true, createdAt: '2024-03-15' },
   { user: { name: 'Rahul Verma' }, rating: 4, foodRating: 4, deliveryRating: 5, comment: 'Great food, fast delivery. The portion size is very generous for the price!', isVerified: true, createdAt: '2024-03-10' },
@@ -172,15 +175,59 @@ const RestaurantDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [vegOnly, setVegOnly] = useState(false);
-
-  const data = RESTAURANT_DATA[id] || RESTAURANT_DATA["1"];
-  const { info, coverImage, menus } = data;
+  const [restaurantData, setRestaurantData] = useState(null);
 
   useEffect(() => {
-    setLoading(true);
-    const t = setTimeout(() => setLoading(false), 700);
-    return () => clearTimeout(t);
+    const fetchDetail = async () => {
+      setLoading(true);
+      try {
+        const res = await axios.get(`${API_BASE_URL}/restaurants/${id}`, { timeout: 3500 });
+        if (res.data?.success && res.data.restaurant) {
+          const r = res.data.restaurant;
+          const formattedMenus = (res.data.menu && res.data.menu.length > 0)
+            ? res.data.menu.map(cat => ({
+                category: cat.category,
+                items: cat.items.map(item => ({
+                  id: item._id || item.id,
+                  name: item.name,
+                  price: item.price,
+                  desc: item.description || '',
+                  isVeg: item.isVeg,
+                  isBestSeller: item.isBestSeller,
+                  image: item.image || r.coverImage || 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&auto=format&fit=crop',
+                }))
+              }))
+            : (RESTAURANT_DATA[id]?.menus || RESTAURANT_DATA["1"].menus);
+
+          setRestaurantData({
+            info: {
+              name: r.name,
+              cuisines: Array.isArray(r.cuisines) ? r.cuisines.join(', ') : r.cuisines,
+              rating: r.rating || 4.5,
+              deliveryTime: r.deliveryTime || '30 mins',
+              costForTwo: `₹${r.costForTwo || 500} for two`,
+              location: r.address?.street || 'Bengaluru, India',
+            },
+            coverImage: r.coverImage || 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&auto=format&fit=crop',
+            menus: formattedMenus,
+          });
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // Fallback to local data
+      }
+
+      const fallback = RESTAURANT_DATA[id] || RESTAURANT_DATA["1"];
+      setRestaurantData(fallback);
+      setLoading(false);
+    };
+
+    fetchDetail();
   }, [id]);
+
+  const currentData = restaurantData || RESTAURANT_DATA[id] || RESTAURANT_DATA["1"];
+  const { info, coverImage, menus } = currentData;
 
   const handleAdd = (item) => {
     dispatch({
@@ -193,7 +240,7 @@ const RestaurantDetailPage = () => {
     dispatch({ type: 'REMOVE_FROM_CART', payload: { id: item.id } });
   };
 
-  const filteredMenus = menus
+  const filteredMenus = (menus || [])
     .map(cat => ({
       ...cat,
       items: cat.items.filter(item => {

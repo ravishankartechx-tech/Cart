@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { HiTag, HiX, HiSparkles } from 'react-icons/hi';
-import axios from 'axios';
+import { API_BASE_URL } from '../api/client';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API = API_BASE_URL;
 
 // Demo coupons — work without backend
 const DEMO_COUPONS = {

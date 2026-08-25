@@ -24,21 +24,22 @@ router.post('/register', authLimiter, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Name, email, and password are required.' });
     }
 
-    const existingUser = await User.findOne({ email });
+    const cleanEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
       return res.status(409).json({ success: false, message: 'Email is already registered.' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const allowedRoles = ['user', 'restaurant', 'delivery'];
+    const allowedRoles = ['user', 'restaurant', 'delivery', 'admin'];
     const userRole = allowedRoles.includes(role) ? role : 'user';
 
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: cleanEmail,
       password: hashedPassword,
-      phone: phone || '',
+      phone: phone ? phone.trim() : '',
       role: userRole,
     });
 
@@ -66,7 +67,8 @@ router.post('/login', authLimiter, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and password are required.' });
     }
 
-    const user = await User.findOne({ email });
+    const cleanEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }

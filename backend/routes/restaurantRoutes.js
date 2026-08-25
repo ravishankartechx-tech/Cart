@@ -52,10 +52,16 @@ router.get('/', async (req, res) => {
 // @access Public
 router.get('/:id', async (req, res) => {
   try {
-    const restaurant = await Restaurant.findById(req.params.id).lean();
+    let restaurant = null;
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      restaurant = await Restaurant.findById(req.params.id).lean();
+    }
+    if (!restaurant) {
+      restaurant = await Restaurant.findOne({ name: { $regex: req.params.id, $options: 'i' } }).lean();
+    }
     if (!restaurant) return res.status(404).json({ success: false, message: 'Restaurant not found.' });
 
-    const menuItems = await MenuItem.find({ restaurant: req.params.id, isAvailable: true }).lean();
+    const menuItems = await MenuItem.find({ restaurant: restaurant._id, isAvailable: true }).lean();
 
     // Group by category
     const menuByCategory = menuItems.reduce((acc, item) => {

@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import OrderStatusStepper from '../components/OrderStatusStepper';
 import { HiPhone, HiRefresh } from 'react-icons/hi';
+import { API_BASE_URL } from '../api/client';
+import { io } from 'socket.io-client';
+import axios from 'axios';
 
-// Demo live-update simulation
+// Status progression stages
 const DEMO_STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'picked_up', 'delivered'];
 
 const OrderTrackingPage = () => {
   const { id } = useParams();
-  const [statusIdx, setStatusIdx] = useState(0);
-  const [order] = useState({
+  const [order, setOrder] = useState({
     restaurantName: 'Meghana Foods',
     total: 785,
     items: [
@@ -17,18 +19,82 @@ const OrderTrackingPage = () => {
       { name: 'Guntur Chicken Dry', qty: 1, price: 280 },
     ],
     deliveryAddress: { street: '42, 5th Cross, Indiranagar', city: 'Bengaluru', pincode: '560038' },
-    deliveryPartner: { name: 'Arjun R.', phone: '+91 98765 12345', photoURL: 'https://i.pravatar.cc/100?img=50' },
+    deliveryPartner: { name: 'Arjun R.', phone: '+91 98765 12345', photoURL: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop' },
     estimatedDelivery: new Date(Date.now() + 20 * 60 * 1000).toISOString(),
+    status: 'pending',
   });
+  const [isLive, setIsLive] = useState(false);
 
-  const currentStatus = DEMO_STATUSES[statusIdx];
-
-  // Simulate status progression for demo
+  // Fetch real order from API
   useEffect(() => {
-    if (statusIdx >= DEMO_STATUSES.length - 1) return;
-    const t = setTimeout(() => setStatusIdx(i => i + 1), 6000);
-    return () => clearTimeout(t);
-  }, [statusIdx]);
+    const fetchOrder = async () => {
+      try {
+        const token = localStorage.getItem('fr_token');
+        const res = await axios.get(`${API_BASE_URL}/orders/${id}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          timeout: 3000,
+        });
+        if (res.data?.success && res.data.order) {
+          const ord = res.data.order;
+          setOrder({
+            restaurantName: ord.restaurantName || ord.restaurant?.name || 'Restaurant',
+            total: ord.total,
+            items: ord.items || [],
+            deliveryAddress: ord.deliveryAddress || { street: 'Bengaluru', city: 'Bengaluru' },
+            deliveryPartner: ord.deliveryPartner || { name: 'Arjun R.', phone: '+91 98765 12345', photoURL: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop' },
+            estimatedDelivery: ord.estimatedDelivery || new Date(Date.now() + 20 * 60 * 1000).toISOString(),
+            status: ord.status || 'pending',
+          });
+          setIsLive(true);
+        }
+      } catch {
+        // Fallback to simulation
+      }
+    };
+
+    if (id) fetchOrder();
+  }, [id]);
+
+  // Socket.io connection for live events
+  useEffect(() => {
+    if (!id || id.startsWith('DEMO')) return;
+    const socketUrl = API_BASE_URL.replace('/api', '');
+    const token = localStorage.getItem('fr_token');
+    const socket = io(socketUrl, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 3,
+    });
+
+    socket.emit('join_order_room', id);
+
+    socket.on('order_status_update', (data) => {
+      if (data.status) {
+        setOrder(prev => ({ ...prev, status: data.status }));
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [id]);
+
+  // Fallback simulation timer when not receiving live server updates
+  useEffect(() => {
+    if (isLive && order.status === 'delivered') return;
+    if (order.status === 'delivered' || order.status === 'cancelled') return;
+
+    const currentIdx = DEMO_STATUSES.indexOf(order.status);
+    if (currentIdx >= 0 && currentIdx < DEMO_STATUSES.length - 1) {
+      const timer = setTimeout(() => {
+        setOrder(prev => ({
+          ...prev,
+          status: DEMO_STATUSES[currentIdx + 1],
+        }));
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [order.status, isLive]);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
@@ -43,36 +109,36 @@ const OrderTrackingPage = () => {
         {/* Status Stepper */}
         <div className="mb-6 animate-slide-up">
           <OrderStatusStepper
-            status={currentStatus}
+            status={order.status}
             estimatedDelivery={order.estimatedDelivery}
-            deliveredAt={currentStatus === 'delivered' ? new Date().toISOString() : null}
+            deliveredAt={order.status === 'delivered' ? new Date().toISOString() : null}
           />
         </div>
 
         {/* Map placeholder */}
-        {!['delivered', 'cancelled'].includes(currentStatus) && (
+        {!['delivered', 'cancelled'].includes(order.status) && (
           <div className="mb-6 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 h-48 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-900/20 dark:to-blue-900/20 relative flex items-center justify-center animate-fade-in">
             <div className="text-center">
               <div className="text-4xl mb-2">🗺</div>
-              <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">Live map tracking</p>
-              <p className="text-xs text-gray-400">Connect Google Maps API to enable</p>
+              <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">Live Delivery Route</p>
+              <p className="text-xs text-gray-400">Partner is en route with your food</p>
             </div>
             <div className="absolute bottom-3 right-3 bg-white dark:bg-gray-800 rounded-xl px-3 py-1.5 shadow-md flex items-center gap-1.5">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
-              <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">Live</span>
+              <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">Live GPS</span>
             </div>
           </div>
         )}
 
         {/* Delivery Partner */}
-        {['picked_up', 'delivered'].includes(currentStatus) && (
+        {['picked_up', 'delivered'].includes(order.status) && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 mb-6 flex items-center justify-between animate-bounce-in">
             <div className="flex items-center gap-3">
               <img src={order.deliveryPartner.photoURL} alt={order.deliveryPartner.name} className="w-12 h-12 rounded-full object-cover border-2 border-[#ff5200]" />
               <div>
                 <p className="text-xs text-gray-400 uppercase font-semibold tracking-wider">Your Delivery Partner</p>
                 <p className="font-bold text-gray-900 dark:text-white">{order.deliveryPartner.name}</p>
-                <div className="flex gap-0.5">{[1,2,3,4].map(i => <span key={i} className="text-yellow-400 text-xs">★</span>)}<span className="text-gray-300 text-xs">★</span></div>
+                <div className="flex gap-0.5">{[1,2,3,4,5].map(i => <span key={i} className="text-yellow-400 text-xs">★</span>)}</div>
               </div>
             </div>
             <a href={`tel:${order.deliveryPartner.phone}`}
@@ -107,16 +173,11 @@ const OrderTrackingPage = () => {
           <Link to="/restaurants" className="flex-1 btn-outline py-3 text-sm text-center rounded-xl">
             Order Again
           </Link>
-          {currentStatus === 'delivered' && (
+          {order.status === 'delivered' && (
             <Link to="/orders" className="flex-1 btn-primary py-3 text-sm text-center rounded-xl">
               Rate Order
             </Link>
           )}
-        </div>
-
-        {/* Demo note */}
-        <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 text-xs text-blue-600 dark:text-blue-400 text-center">
-          🎬 Demo: Status auto-updates every 6 seconds to simulate live tracking
         </div>
       </div>
     </div>

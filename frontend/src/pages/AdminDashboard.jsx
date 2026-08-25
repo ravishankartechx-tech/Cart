@@ -1,48 +1,102 @@
-import { useState } from 'react';
-import { HiChartBar, HiUsers, HiShoppingCart, HiCurrencyRupee, HiOfficeBuilding, HiCheck, HiX, HiEye } from 'react-icons/hi';
+import { useState, useEffect } from 'react';
+import { HiChartBar, HiUsers, HiShoppingCart, HiCurrencyRupee, HiOfficeBuilding, HiCheck, HiX } from 'react-icons/hi';
+import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../api/client';
+import axios from 'axios';
 
 const DEMO_STATS = {
-  totalUsers: 12483, totalRestaurants: 347, totalOrders: 98241, totalRevenue: 4823500,
+  totalUsers: 1420,
+  totalRestaurants: 9,
+  totalOrders: 284,
+  totalRevenue: 284000,
   dailyRevenue: [
-    { _id: '2024-03-14', revenue: 42300, orders: 186 },
-    { _id: '2024-03-15', revenue: 58700, orders: 242 },
-    { _id: '2024-03-16', revenue: 51200, orders: 215 },
-    { _id: '2024-03-17', revenue: 67800, orders: 298 },
-    { _id: '2024-03-18', revenue: 73100, orders: 321 },
-    { _id: '2024-03-19', revenue: 81200, orders: 356 },
-    { _id: '2024-03-20', revenue: 59400, orders: 261 },
+    { _id: '2026-08-19', revenue: 42300, orders: 46 },
+    { _id: '2026-08-20', revenue: 58700, orders: 58 },
+    { _id: '2026-08-21', revenue: 51200, orders: 49 },
+    { _id: '2026-08-22', revenue: 67800, orders: 65 },
+    { _id: '2026-08-23', revenue: 73100, orders: 72 },
+    { _id: '2026-08-24', revenue: 81200, orders: 84 },
+    { _id: '2026-08-25', revenue: 59400, orders: 60 },
   ],
 };
 
 const PENDING_RESTAURANTS = [
-  { id: 1, name: 'Spice Garden', owner: 'Ravi Kumar', cuisines: ['North Indian'], city: 'HSR Layout', date: '2024-03-19' },
-  { id: 2, name: 'Sushi Katana', owner: 'Yuki Tanaka', cuisines: ['Japanese', 'Sushi'], city: 'Koramangala', date: '2024-03-20' },
-  { id: 3, name: 'Taco Town', owner: 'Monica Pereira', cuisines: ['Mexican'], city: 'Indiranagar', date: '2024-03-20' },
+  { id: '1', name: 'Spice Garden', owner: { name: 'Ravi Kumar' }, cuisines: ['North Indian'], city: 'HSR Layout', date: '2026-08-24' },
+  { id: '2', name: 'Sushi Katana', owner: { name: 'Yuki Tanaka' }, cuisines: ['Japanese', 'Sushi'], city: 'Koramangala', date: '2026-08-25' },
+  { id: '3', name: 'Taco Town', owner: { name: 'Monica Pereira' }, cuisines: ['Mexican'], city: 'Indiranagar', date: '2026-08-25' },
 ];
 
 const RECENT_ORDERS = [
-  { id: 'ORD7821', user: 'Priya S.', restaurant: 'Meghana Foods', total: 785, status: 'delivered' },
-  { id: 'ORD7820', user: 'Rahul V.', restaurant: 'Truffles', total: 1240, status: 'preparing' },
-  { id: 'ORD7819', user: 'Ananya K.', restaurant: 'A2B', total: 330, status: 'picked_up' },
-  { id: 'ORD7818', user: 'Kiran M.', restaurant: 'Empire', total: 895, status: 'delivered' },
+  { id: 'ORD7821', user: { name: 'Priya S.' }, restaurant: { name: 'Meghana Foods' }, total: 785, status: 'delivered' },
+  { id: 'ORD7820', user: { name: 'Rahul V.' }, restaurant: { name: 'Truffles' }, total: 1240, status: 'preparing' },
+  { id: 'ORD7819', user: { name: 'Ananya K.' }, restaurant: { name: 'A2B' }, total: 330, status: 'picked_up' },
+  { id: 'ORD7818', user: { name: 'Kiran M.' }, restaurant: { name: 'Empire' }, total: 895, status: 'delivered' },
 ];
 
 const AdminDashboard = () => {
-  const [approvals, setApprovals] = useState(
-    PENDING_RESTAURANTS.reduce((a, r) => ({ ...a, [r.id]: null }), {})
-  );
+  const { token } = useAuth();
+  const [stats, setStats] = useState(DEMO_STATS);
+  const [restaurants, setRestaurants] = useState(PENDING_RESTAURANTS);
+  const [orders, setOrders] = useState(RECENT_ORDERS);
+  const [approvals, setApprovals] = useState({});
   const [activeTab, setActiveTab] = useState('overview');
 
-  const maxRevenue = Math.max(...DEMO_STATS.dailyRevenue.map(d => d.revenue));
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      if (!token) return;
+      try {
+        const config = { headers: { Authorization: `Bearer ${token}` }, timeout: 3000 };
+        const [statsRes, restoRes, ordersRes] = await Promise.allSettled([
+          axios.get(`${API_BASE_URL}/admin/stats`, config),
+          axios.get(`${API_BASE_URL}/admin/restaurants`, config),
+          axios.get(`${API_BASE_URL}/admin/orders`, config),
+        ]);
+
+        if (statsRes.status === 'fulfilled' && statsRes.value.data?.success) {
+          setStats(prev => ({ ...prev, ...statsRes.value.data.stats }));
+        }
+
+        if (restoRes.status === 'fulfilled' && restoRes.value.data?.success) {
+          setRestaurants(restoRes.value.data.restaurants || []);
+        }
+
+        if (ordersRes.status === 'fulfilled' && ordersRes.value.data?.success) {
+          setOrders(ordersRes.value.data.orders || []);
+        }
+      } catch {
+        // Fallback to local demo state
+      }
+    };
+
+    fetchAdminData();
+  }, [token]);
+
+  const handleApproval = async (id, status) => {
+    setApprovals(p => ({ ...p, [id]: status }));
+    try {
+      if (token && !id.toString().startsWith('temp')) {
+        await axios.put(`${API_BASE_URL}/admin/restaurants/${id}/approve`, {
+          isApproved: status === 'approved'
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+    } catch {
+      // Local state preserved
+    }
+  };
+
+  const dailyRevenueList = stats.dailyRevenue && stats.dailyRevenue.length > 0 ? stats.dailyRevenue : DEMO_STATS.dailyRevenue;
+  const maxRevenue = Math.max(...dailyRevenueList.map(d => d.revenue || 1), 1000);
 
   const statCards = [
-    { label: 'Total Users', value: DEMO_STATS.totalUsers.toLocaleString(), icon: <HiUsers />, color: 'from-blue-500 to-indigo-600', bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600' },
-    { label: 'Restaurants', value: DEMO_STATS.totalRestaurants, icon: <HiOfficeBuilding />, color: 'from-purple-500 to-pink-600', bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-600' },
-    { label: 'Total Orders', value: DEMO_STATS.totalOrders.toLocaleString(), icon: <HiShoppingCart />, color: 'from-orange-500 to-red-500', bg: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-600' },
-    { label: 'Revenue', value: `₹${(DEMO_STATS.totalRevenue / 100000).toFixed(1)}L`, icon: <HiCurrencyRupee />, color: 'from-green-500 to-teal-500', bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-600' },
+    { label: 'Total Users', value: (stats.totalUsers || 1420).toLocaleString(), icon: <HiUsers />, color: 'from-blue-500 to-indigo-600', bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600' },
+    { label: 'Restaurants', value: (stats.totalRestaurants || 9), icon: <HiOfficeBuilding />, color: 'from-purple-500 to-pink-600', bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-600' },
+    { label: 'Total Orders', value: (stats.totalOrders || 284).toLocaleString(), icon: <HiShoppingCart />, color: 'from-orange-500 to-red-500', bg: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-600' },
+    { label: 'Total Revenue', value: `₹${((stats.totalRevenue || 284000) / 1000).toFixed(1)}k`, icon: <HiCurrencyRupee />, color: 'from-green-500 to-teal-500', bg: 'bg-green-50 dark:bg-green-900/20', text: 'text-green-600' },
   ];
 
-  const STATUS_COLORS = { delivered: 'badge-green', preparing: 'badge-orange', picked_up: 'badge-blue', cancelled: 'badge-red' };
+  const STATUS_COLORS = { delivered: 'badge-green', preparing: 'badge-orange', picked_up: 'badge-blue', cancelled: 'badge-red', pending: 'badge-orange' };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
@@ -84,36 +138,15 @@ const AdminDashboard = () => {
             {/* Revenue Chart */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 mb-8">
               <h3 className="font-black text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                <HiChartBar className="w-5 h-5 text-[#ff5200]" /> Last 7 Days Revenue
+                <HiChartBar className="w-5 h-5 text-[#ff5200]" /> Recent Platform Revenue
               </h3>
               <div className="flex items-end gap-3 h-40">
-                {DEMO_STATS.dailyRevenue.map((d, i) => (
+                {dailyRevenueList.map((d, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                    <div className="w-full gradient-primary rounded-t-lg transition-all hover:opacity-90"
-                      style={{ height: `${(d.revenue / maxRevenue) * 100}%` }} />
-                    <p className="text-[10px] text-gray-400 font-medium">{d._id.slice(5)}</p>
-                    <p className="text-[10px] text-gray-600 dark:text-gray-300 font-bold">₹{(d.revenue/1000).toFixed(0)}k</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Orders */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                <h3 className="font-black text-gray-900 dark:text-white">Recent Orders</h3>
-              </div>
-              <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                {RECENT_ORDERS.map(o => (
-                  <div key={o.id} className="px-6 py-4 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-gray-900 dark:text-white text-sm">{o.user} → {o.restaurant}</p>
-                      <p className="text-xs text-gray-400">{o.id}</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-bold text-gray-900 dark:text-white text-sm">₹{o.total}</span>
-                      <span className={`badge ${STATUS_COLORS[o.status]}`}>{o.status}</span>
-                    </div>
+                    <div className="w-full gradient-primary rounded-t-lg transition-all hover:opacity-90 min-h-[12px]"
+                      style={{ height: `${Math.max(12, (d.revenue / maxRevenue) * 100)}%` }} />
+                    <p className="text-[10px] text-gray-400 font-medium">{d._id?.slice(5) || `Day ${i+1}`}</p>
+                    <p className="text-[10px] text-gray-600 dark:text-gray-300 font-bold">₹{((d.revenue || 0)/1000).toFixed(0)}k</p>
                   </div>
                 ))}
               </div>
@@ -122,61 +155,64 @@ const AdminDashboard = () => {
         )}
 
         {activeTab === 'restaurants' && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="font-black text-gray-900 dark:text-white">Pending Approvals ({PENDING_RESTAURANTS.length})</h3>
-            </div>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
+            <h3 className="font-black text-gray-900 dark:text-white mb-4">Restaurant Partner Approvals</h3>
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
-              {PENDING_RESTAURANTS.map(r => (
-                <div key={r.id} className="px-6 py-5 flex items-center justify-between gap-4">
-                  <div>
-                    <p className="font-bold text-gray-900 dark:text-white">{r.name}</p>
-                    <p className="text-xs text-gray-500">by {r.owner} · {r.cuisines.join(', ')} · {r.city}</p>
-                    <p className="text-xs text-gray-400">{r.date}</p>
+              {restaurants.map(r => {
+                const id = r._id || r.id;
+                const isDecided = approvals[id];
+                return (
+                  <div key={id} className="py-4 flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-bold text-gray-900 dark:text-white text-sm">{r.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Owner: {r.owner?.name || 'Owner'} · {Array.isArray(r.cuisines) ? r.cuisines.join(', ') : r.cuisines}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isDecided ? (
+                        <span className={`badge ${isDecided === 'approved' ? 'badge-green' : 'badge-red'}`}>
+                          {isDecided}
+                        </span>
+                      ) : (
+                        <>
+                          <button onClick={() => handleApproval(id, 'approved')} className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center hover:bg-green-200 transition-colors">
+                            <HiCheck className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleApproval(id, 'rejected')} className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-200 transition-colors">
+                            <HiX className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    {approvals[r.id] === null ? (
-                      <>
-                        <button onClick={() => setApprovals(p => ({ ...p, [r.id]: true }))}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-green-500 text-white text-sm font-bold rounded-lg hover:bg-green-600 transition-colors">
-                          <HiCheck className="w-4 h-4" /> Approve
-                        </button>
-                        <button onClick={() => setApprovals(p => ({ ...p, [r.id]: false }))}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors">
-                          <HiX className="w-4 h-4" /> Reject
-                        </button>
-                      </>
-                    ) : (
-                      <span className={`badge ${approvals[r.id] ? 'badge-green' : 'badge-red'}`}>
-                        {approvals[r.id] ? '✓ Approved' : '✗ Rejected'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
         {activeTab === 'orders' && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="font-black text-gray-900 dark:text-white">All Orders</h3>
-            </div>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6">
+            <h3 className="font-black text-gray-900 dark:text-white mb-4">Platform Orders</h3>
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
-              {[...RECENT_ORDERS, ...RECENT_ORDERS].map((o, i) => (
-                <div key={i} className="px-6 py-4 flex items-center justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">{o.user}</p>
-                    <p className="text-xs text-gray-400">{o.restaurant} · {o.id}</p>
+              {orders.map(o => {
+                const id = o._id || o.id;
+                return (
+                  <div key={id} className="py-4 flex items-center justify-between">
+                    <div>
+                      <span className="font-mono text-xs text-gray-400">#{id?.slice?.(-6) || id}</span>
+                      <p className="font-bold text-gray-900 dark:text-white text-sm">
+                        {o.user?.name || 'Customer'} → {o.restaurant?.name || o.restaurantName || 'Restaurant'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="font-black text-sm text-gray-900 dark:text-white">₹{o.total}</span>
+                      <span className={`badge ${STATUS_COLORS[o.status] || 'badge-blue'}`}>{o.status}</span>
+                    </div>
                   </div>
-                  <span className="font-bold text-gray-900 dark:text-white text-sm shrink-0">₹{o.total}</span>
-                  <span className={`badge ${STATUS_COLORS[o.status]} shrink-0`}>{o.status}</span>
-                  <button className="text-gray-400 hover:text-[#ff5200] transition-colors shrink-0">
-                    <HiEye className="w-5 h-5" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

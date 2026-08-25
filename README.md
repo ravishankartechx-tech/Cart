@@ -1,34 +1,75 @@
-﻿# FeastAI - Food Delivery Platform Setup Guide
+# 🍕 FeastRocket — Modern Food Delivery Platform
 
-## Step 1: Environment Setup
+A full-stack food delivery web application built with React 19, TailwindCSS, Express 5, MongoDB / Mongoose, and Socket.io.
 
-1. Open a terminal in the backend folder.
-2. Ensure you have the .env file created.
-3. Run npm install
-4. Run npm run dev
+---
 
-## Step 2: Running the Frontend
+## 🚀 Quick Start (One-Command Startup)
 
-1. Open a new terminal in the frontend folder.
-2. Run npm install
-3. Run npm run dev
-4. Open http://localhost:5173
+Install dependencies across workspaces:
+```bash
+npm install
+```
 
-## Environment Variables (.env)
+Start **both Backend (Port 5001) and Frontend (Port 5173)** concurrently:
+```bash
+npm run dev
+```
 
-Place this file inside backend/.env
+Visit the app in your browser: **[http://localhost:5173](http://localhost:5173)**
 
-WARNING: Never use placeholder values in production. Generate a strong secret before deploying.
+---
 
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/food-delivery
-JWT_SECRET=REPLACE_WITH_STRONG_RANDOM_SECRET_MIN_32_CHARS
-FRONTEND_URL=http://localhost:5173
-STRIPE_SECRET_KEY=sk_test_your_stripe_key_here
+## 🗄️ Database Seeding
 
-To generate a strong JWT secret run this command:
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+To populate MongoDB with rich sample data (9 restaurants with full menus, test accounts for all roles, coupons, and orders):
 
-## Sample Data
+```bash
+npm run seed
+```
 
-Seeder script coming soon.
+---
+
+## 🔑 Demo Test Accounts
+
+The login page provides **1-click login buttons** for all 4 roles:
+
+| Role | Email | Password | Dashboard Link |
+|---|---|---|---|
+| **Customer** | `user@feastrocket.com` | `user123` | `/orders` & `/profile` |
+| **Restaurant Owner** | `restaurant@feastrocket.com` | `resto123` | `/restaurant-dashboard` |
+| **Delivery Partner** | `delivery@feastrocket.com` | `delivery123` | `/delivery` |
+| **Platform Admin** | `admin@feastrocket.com` | `admin123` | `/admin` |
+
+---
+
+## 📁 Project Structure
+
+```
+food-delivery-app/
+├── backend/                  # Node.js Express REST API & Socket.io
+│   ├── middleware/           # Auth, Role, Rate Limiter
+│   ├── models/               # Mongoose Schemas (User, Restaurant, Order, Menu, Coupon, etc.)
+│   ├── routes/               # API Endpoints
+│   ├── seed.js               # Database Seeder Script
+│   ├── server.js             # Server Entry Point (Port 5001)
+│   └── .env                  # Backend configuration
+├── frontend/                 # Vite + React 19 Application
+│   ├── src/
+│   │   ├── api/client.js     # Centralized Axios API client
+│   │   ├── components/       # UI Components (Navbar, FilterBar, Stepper, etc.)
+│   │   ├── context/          # AuthContext, CartContext, ThemeContext
+│   │   └── pages/            # Page Views (Home, Listing, Detail, Tracking, Dashboards)
+│   └── .env                  # Frontend configuration (VITE_API_URL=http://localhost:5001/api)
+├── package.json              # Root npm workspaces config with concurrent runner
+└── README.md
+```
+
+---
+
+## 🛠️ Individual Workspace Scripts
+
+- **Run Frontend Only**: `npm run dev:frontend`
+- **Run Backend Only**: `npm run dev:backend`
+- **Build Frontend Bundle**: `npm run build`
+- **Seed Database**: `npm run seed`

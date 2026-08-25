@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import { API_BASE_URL } from '../api/client';
 import { HiLocationMarker, HiPlus, HiCreditCard, HiCash, HiDeviceMobile } from 'react-icons/hi';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API = API_BASE_URL;
 
 const PAYMENT_METHODS = [
   { value: 'card',  label: 'Credit / Debit Card', icon: <HiCreditCard className="w-5 h-5" /> },
@@ -49,13 +49,14 @@ const CheckoutPage = () => {
     setError('');
     try {
       const { data } = await axios.post(`${API}/orders`, {
-        restaurantId:   cart.restaurantId || '000000000000000000000001',
+        restaurantId:   cart.restaurantId || '65f000000000000000000001',
         restaurantName: cart.restaurantName || 'Demo Restaurant',
         items: cart.items.map(i => ({
           name: i.name, price: i.price, qty: i.qty, image: i.image,
         })),
         deliveryAddress: deliveryAddr,
         paymentMethod,
+        deliveryFee,
         specialInstructions: instructions,
       });
       if (data.success) {
