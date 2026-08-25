@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Restaurant = require('../models/Restaurant');
 const MenuItem = require('../models/MenuItem');
 const authMiddleware = require('../middleware/auth');
