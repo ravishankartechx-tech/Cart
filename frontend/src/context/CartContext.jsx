@@ -10,6 +10,7 @@ const initialState = {
 
 function cartReducer(state, action) {
   switch (action.type) {
+    case 'ADD_ITEM':
     case 'ADD_TO_CART': {
       const { id, name, price, image, restaurantId, restaurantName } = action.payload;
 

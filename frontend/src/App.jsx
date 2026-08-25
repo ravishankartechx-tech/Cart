@@ -6,6 +6,7 @@ import { CartProvider, useCart } from './context/CartContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
+import AiFoodAssistant from './components/AiFoodAssistant';
 
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -98,6 +99,7 @@ function AppLayout() {
         </Routes>
       </main>
       <StickyCart />
+      <AiFoodAssistant />
       {showFooter && <Footer />}
     </div>
   );

@@ -161,6 +161,7 @@ const RESTAURANT_DATA = {
 
 import { API_BASE_URL } from '../api/client';
 import axios from 'axios';
+import ItemCustomizerModal from '../components/ItemCustomizerModal';
 
 const DEMO_REVIEWS = [
   { user: { name: 'Priya Sharma' }, rating: 5, foodRating: 5, deliveryRating: 4, comment: 'Absolutely amazing! The food was perfectly cooked and arrived piping hot. Will definitely order again!', isVerified: true, createdAt: '2024-03-15' },
@@ -176,6 +177,7 @@ const RestaurantDetailPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [vegOnly, setVegOnly] = useState(false);
   const [restaurantData, setRestaurantData] = useState(null);
+  const [customizingItem, setCustomizingItem] = useState(null);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -364,10 +366,18 @@ const RestaurantDetailPage = () => {
 
                               <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-24">
                                 {qty === 0 ? (
-                                  <button onClick={() => handleAdd(item)}
-                                    className="w-full bg-white dark:bg-gray-800 border-2 border-[#ff5200] text-[#ff5200] font-black text-sm py-1.5 rounded-lg shadow-md hover:bg-[#ff5200] hover:text-white transition-all">
-                                    ADD
-                                  </button>
+                                  <div className="flex flex-col items-center gap-0.5">
+                                    <button onClick={() => handleAdd(item)}
+                                      className="w-full bg-white dark:bg-gray-800 border-2 border-[#ff5200] text-[#ff5200] font-black text-sm py-1.5 rounded-lg shadow-md hover:bg-[#ff5200] hover:text-white transition-all">
+                                      ADD
+                                    </button>
+                                    <button
+                                      onClick={() => setCustomizingItem(item)}
+                                      className="text-[9px] font-bold text-gray-500 hover:text-[#ff5200] dark:text-gray-400"
+                                    >
+                                      Customise ✨
+                                    </button>
+                                  </div>
                                 ) : (
                                   <div className="flex items-center justify-between bg-[#ff5200] rounded-lg shadow-md overflow-hidden">
                                     <button onClick={() => handleRemove(item)}
@@ -433,6 +443,14 @@ const RestaurantDetailPage = () => {
           </div>
         )}
       </div>
+
+      <ItemCustomizerModal
+        isOpen={!!customizingItem}
+        onClose={() => setCustomizingItem(null)}
+        item={customizingItem}
+        restaurantId={id}
+        restaurantName={info?.name}
+      />
     </div>
   );
 };
