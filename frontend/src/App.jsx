@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { CartProvider, useCart } from './context/CartContext';
+import { FavoritesProvider } from './context/FavoritesContext';
+import { ToastProvider } from './context/ToastContext';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -108,13 +110,17 @@ function AppLayout() {
 function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <CartProvider>
-          <Router>
-            <AppLayout />
-          </Router>
-        </CartProvider>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <FavoritesProvider>
+            <CartProvider>
+              <Router>
+                <AppLayout />
+              </Router>
+            </CartProvider>
+          </FavoritesProvider>
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }

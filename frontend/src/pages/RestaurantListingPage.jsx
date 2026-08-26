@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { HiSearch, HiAdjustments } from 'react-icons/hi';
+import { useSearchParams } from 'react-router-dom';
+import { HiSearch, HiAdjustments, HiHeart, HiLightningBolt } from 'react-icons/hi';
 import RestaurantCard from '../components/RestaurantCard';
 import FilterBar from '../components/FilterBar';
 import { SkeletonCard } from '../components/SkeletonLoader';
+import { useFavorites } from '../context/FavoritesContext';
 import { API_BASE_URL } from '../api/client';
 import axios from 'axios';
 
@@ -19,16 +21,51 @@ const MOCK_RESTAURANTS = [
 ];
 
 const RestaurantListingPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { favorites } = useFavorites();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ sort: '', veg: '', rating: '', cuisine: '', search: '' });
+  const [favoritesOnly, setFavoritesOnly] = useState(searchParams.get('favorites') === 'true');
+
+  const [filters, setFilters] = useState({
+    sort: '',
+    veg: '',
+    rating: '',
+    cuisine: '',
+    search: searchParams.get('search') || '',
+  });
+
+  useEffect(() => {
+    const urlFav = searchParams.get('favorites') === 'true';
+    setFavoritesOnly(urlFav);
+    const urlSearch = searchParams.get('search') || '';
+    if (urlSearch !== filters.search) {
+      setFilters(p => ({ ...p, search: urlSearch }));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchRestaurants();
-  }, [filters]);
+  }, [filters, favoritesOnly, favorites]);
 
   const fetchRestaurants = async () => {
     setLoading(true);
+
+    if (favoritesOnly) {
+      // Filter from saved favorites
+      let results = [...favorites];
+      if (filters.search) {
+        const q = filters.search.toLowerCase();
+        results = results.filter(r =>
+          r.name.toLowerCase().includes(q) ||
+          (Array.isArray(r.cuisines) ? r.cuisines : []).some(c => c.toLowerCase().includes(q))
+        );
+      }
+      setRestaurants(results);
+      setLoading(false);
+      return;
+    }
+
     try {
       const params = {};
       if (filters.search) params.search = filters.search;
@@ -39,7 +76,6 @@ const RestaurantListingPage = () => {
 
       const res = await axios.get(`${API_BASE_URL}/restaurants`, { params, timeout: 3500 });
       if (res.data?.success && res.data.restaurants?.length > 0) {
-        // Transform backend response to match card requirements
         const mapped = res.data.restaurants.map(r => ({
           id: r._id || r.id,
           name: r.name,
@@ -57,10 +93,10 @@ const RestaurantListingPage = () => {
         return;
       }
     } catch {
-      // Backend not running or error - fallback to local filter logic
+      // Fallback
     }
 
-    // Fallback to client-side filtering on mock data
+    // Client side filtering
     let results = [...MOCK_RESTAURANTS];
 
     if (filters.search) {
@@ -82,28 +118,59 @@ const RestaurantListingPage = () => {
     setLoading(false);
   };
 
+  const toggleFavoritesFilter = () => {
+    const next = !favoritesOnly;
+    setFavoritesOnly(next);
+    if (next) {
+      setSearchParams({ favorites: 'true' });
+    } else {
+      setSearchParams({});
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-16 z-30">
+      {/* Header & Filter Controls */}
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-16 z-30 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
-          {/* Search */}
-          <div className="relative max-w-lg">
-            <HiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              value={filters.search}
-              onChange={e => setFilters(p => ({ ...p, search: e.target.value }))}
-              placeholder="Search for restaurant, cuisine..."
-              className="input-base pl-11 h-11 text-sm bg-gray-50 dark:bg-gray-800 border-gray-200"
-            />
-            {filters.search && (
-              <button onClick={() => setFilters(p => ({ ...p, search: '' }))}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
-            )}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-lg">
+              <HiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                value={filters.search}
+                onChange={e => {
+                  setFilters(p => ({ ...p, search: e.target.value }));
+                }}
+                placeholder="Search for restaurant, cuisine, or dish..."
+                className="input-base pl-11 h-11 text-sm bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 w-full"
+              />
+              {filters.search && (
+                <button
+                  onClick={() => setFilters(p => ({ ...p, search: '' }))}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl leading-none"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            {/* Quick Favorites Toggle Pill */}
+            <button
+              onClick={toggleFavoritesFilter}
+              className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+                favoritesOnly
+                  ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-500'
+              }`}
+            >
+              <HiHeart className={`w-4 h-4 ${favoritesOnly ? 'fill-white' : 'text-rose-500'}`} />
+              <span>Saved Favorites ({favorites.length})</span>
+            </button>
           </div>
 
-          {/* Filters */}
+          {/* Filters Bar */}
           <div className="flex items-center gap-3">
             <HiAdjustments className="text-gray-400 w-5 h-5 shrink-0" />
             <FilterBar filters={filters} onChange={setFilters} />
@@ -113,15 +180,22 @@ const RestaurantListingPage = () => {
 
       {/* Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          {loading ? 'Loading restaurants…' : `${restaurants.length} restaurant${restaurants.length !== 1 ? 's' : ''} found`}
-        </p>
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+            {loading ? 'Loading restaurants…' : `${restaurants.length} restaurant${restaurants.length !== 1 ? 's' : ''} available`}
+          </p>
+          {favoritesOnly && (
+            <span className="text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-3 py-1 rounded-full border border-rose-200 dark:border-rose-800">
+              Showing Favorites Only
+            </span>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading
             ? Array(9).fill(0).map((_, i) => <SkeletonCard key={i} />)
             : restaurants.map((r, i) => (
-                <div key={r.id} className={`animate-fade-in stagger-${Math.min(i % 4 + 1, 4)}`}>
+                <div key={r.id} className="animate-in fade-in zoom-in-95 duration-200">
                   <RestaurantCard restaurant={r} />
                 </div>
               ))
@@ -129,17 +203,25 @@ const RestaurantListingPage = () => {
         </div>
 
         {!loading && restaurants.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="text-7xl mb-6">🔍</div>
-            <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">No results found</h3>
-            <p className="text-gray-500 dark:text-gray-400 max-w-sm">
-              Try adjusting your search or filters to find what you're looking for.
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm mt-4">
+            <div className="text-6xl mb-4">{favoritesOnly ? '❤️' : '🔍'}</div>
+            <h3 className="text-xl font-black text-gray-800 dark:text-white mb-1">
+              {favoritesOnly ? 'No saved favorites yet' : 'No restaurants found'}
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm">
+              {favoritesOnly
+                ? 'Click the heart icon on any restaurant card to save your favorite spots here!'
+                : 'Try clearing your search keyword or relaxing filter criteria.'}
             </p>
             <button
-              onClick={() => setFilters({ sort: '', veg: '', rating: '', cuisine: '', search: '' })}
-              className="mt-6 btn-primary px-8 py-2.5 text-sm"
+              onClick={() => {
+                setFavoritesOnly(false);
+                setFilters({ sort: '', veg: '', rating: '', cuisine: '', search: '' });
+                setSearchParams({});
+              }}
+              className="mt-5 btn-primary px-6 py-2 text-xs rounded-xl cursor-pointer"
             >
-              Clear Filters
+              Show All Restaurants
             </button>
           </div>
         )}
