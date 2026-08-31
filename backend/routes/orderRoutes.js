@@ -45,7 +45,7 @@ router.post('/', authMiddleware, async (req, res) => {
 
     // Emit socket event for real-time tracking
     if (req.app.get('io')) {
-      req.app.get('io').emit('new_order', { orderId: order._id, restaurantId });
+      req.app.get('io').to(`restaurant_${restaurantId}`).emit('new_order', { orderId: order._id, restaurantId });
     }
 
     res.status(201).json({ success: true, order });
@@ -99,7 +99,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
 // @route  PUT /api/orders/:id/status
 // @desc   Update order status
 // @access Private - restaurant/delivery/admin
-router.put('/:id/status', authMiddleware, async (req, res) => {
+router.put('/:id/status', authMiddleware, roleMiddleware('restaurant', 'delivery', 'admin'), async (req, res) => {
   try {
     const { status } = req.body;
     const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'picked_up', 'delivered', 'cancelled'];

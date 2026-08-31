@@ -8,7 +8,7 @@ const { authLimiter } = require('../middleware/rateLimiter');
 const generateToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role, email: user.email, name: user.name },
-    process.env.JWT_SECRET || 'supersecretkey',
+    process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
 };
@@ -21,9 +21,17 @@ router.post('/register', authLimiter, async (req, res) => {
     const { name, email, password, phone, role } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'Name, email, and password are required.' });
-    }
+  return res.status(400).json({ success: false, message: 'Name, email, and password are required.' });
+}
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(email.trim().toLowerCase())) {
+  return res.status(400).json({ success: false, message: 'Invalid email format.' });
+}
+
+if (password.length < 8) {
+  return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
+}
     const cleanEmail = email.trim().toLowerCase();
     const existingUser = await User.findOne({ email: cleanEmail });
     if (existingUser) {
@@ -32,8 +40,8 @@ router.post('/register', authLimiter, async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const allowedRoles = ['user', 'restaurant', 'delivery', 'admin'];
-    const userRole = allowedRoles.includes(role) ? role : 'user';
+    const publicRoles = ['user', 'restaurant', 'delivery'];
+const userRole = publicRoles.includes(role) ? role : 'user';
 
     const user = await User.create({
       name: name.trim(),

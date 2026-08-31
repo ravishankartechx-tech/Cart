@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY === 'sk_test_placeholder') {
+  console.warn('⚠️  STRIPE_SECRET_KEY is not set. Payments will not work.');
+}
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 const authMiddleware = require('../middleware/auth');
 
@@ -37,7 +40,7 @@ router.post('/create-intent', authMiddleware, async (req, res) => {
 // @route  POST /api/payment/webhook
 // @desc   Stripe webhook for payment confirmation
 // @access Public (Stripe)
-router.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
 
@@ -46,12 +49,15 @@ router.post('/webhook', express.raw({ type: 'application/json' }), (req, res) =>
   } catch (err) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
-
-  if (event.type === 'payment_intent.succeeded') {
-    const pi = event.data.object;
-    console.log(`Payment succeeded for order: ${pi.metadata.orderId}`);
-    // TODO: Update order paymentStatus to 'paid'
-  }
+if (event.type === 'payment_intent.succeeded') {
+  const pi = event.data.object;
+  console.log(`Payment succeeded for order: ${pi.metadata.orderId}`);
+  const Order = require('../models/Order');
+  await Order.findByIdAndUpdate(pi.metadata.orderId, {
+    paymentStatus: 'paid',
+    paymentIntentId: pi.id,
+  });
+}
 
   res.json({ received: true });
 });
