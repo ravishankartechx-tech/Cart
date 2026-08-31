@@ -12,6 +12,10 @@ router.post('/register', authMiddleware, async (req, res) => {
   try {
     const { vehicleType, vehicleNumber, licenseNumber } = req.body;
 
+    if (!vehicleType || !vehicleNumber || !licenseNumber) {
+      return res.status(400).json({ success: false, message: 'All fields are required.' });
+    }
+
     const existing = await DeliveryPartner.findOne({ user: req.user.id });
     if (existing) return res.status(409).json({ success: false, message: 'Already registered as delivery partner.' });
 
@@ -46,8 +50,8 @@ router.get('/me', authMiddleware, async (req, res) => {
 
 // @route  PUT /api/delivery/status
 // @desc   Toggle online/offline status
-// @access Private - delivery
-router.put('/status', authMiddleware, async (req, res) => {
+// @access Private - delivery only
+router.put('/status', authMiddleware, roleMiddleware('delivery'), async (req, res) => {
   try {
     const { isOnline, isAvailable } = req.body;
     const partner = await DeliveryPartner.findOneAndUpdate(
@@ -55,6 +59,7 @@ router.put('/status', authMiddleware, async (req, res) => {
       { isOnline, isAvailable },
       { new: true }
     );
+    if (!partner) return res.status(404).json({ success: false, message: 'Delivery partner not found.' });
     res.json({ success: true, partner });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
@@ -63,10 +68,19 @@ router.put('/status', authMiddleware, async (req, res) => {
 
 // @route  PUT /api/delivery/location
 // @desc   Update current location (called periodically)
-// @access Private
-router.put('/location', authMiddleware, async (req, res) => {
+// @access Private - delivery only
+router.put('/location', authMiddleware, roleMiddleware('delivery'), async (req, res) => {
   try {
     const { lat, lng } = req.body;
+
+    // Validate coordinates
+    if (
+      typeof lat !== 'number' || typeof lng !== 'number' ||
+      lat < -90 || lat > 90 || lng < -180 || lng > 180
+    ) {
+      return res.status(400).json({ success: false, message: 'Invalid coordinates.' });
+    }
+
     const partner = await DeliveryPartner.findOneAndUpdate(
       { user: req.user.id },
       { currentLocation: { lat, lng, updatedAt: new Date() } },
@@ -85,9 +99,9 @@ router.put('/location', authMiddleware, async (req, res) => {
 });
 
 // @route  GET /api/delivery/orders/available
-// @desc   Get orders available for pickup (nearby ready orders)
-// @access Private
-router.get('/orders/available', authMiddleware, async (req, res) => {
+// @desc   Get orders available for pickup
+// @access Private - delivery only
+router.get('/orders/available', authMiddleware, roleMiddleware('delivery'), async (req, res) => {
   try {
     const orders = await Order.find({ status: 'ready', deliveryPartner: null })
       .populate('restaurant', 'name address')
@@ -103,12 +117,18 @@ router.get('/orders/available', authMiddleware, async (req, res) => {
 
 // @route  PUT /api/delivery/orders/:id/accept
 // @desc   Accept a delivery
-// @access Private
-router.put('/orders/:id/accept', authMiddleware, async (req, res) => {
+// @access Private - delivery only
+router.put('/orders/:id/accept', authMiddleware, roleMiddleware('delivery'), async (req, res) => {
   try {
+    // Check partner is registered and online
+    const partner = await DeliveryPartner.findOne({ user: req.user.id });
+    if (!partner) return res.status(403).json({ success: false, message: 'Not a registered delivery partner.' });
+    if (!partner.isOnline) return res.status(400).json({ success: false, message: 'You must be online to accept orders.' });
+
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
     if (order.deliveryPartner) return res.status(409).json({ success: false, message: 'Order already taken.' });
+    if (order.status !== 'ready') return res.status(400).json({ success: false, message: 'Order is not ready for pickup.' });
 
     order.deliveryPartner = req.user.id;
     order.status = 'picked_up';
@@ -131,11 +151,20 @@ router.put('/orders/:id/accept', authMiddleware, async (req, res) => {
 
 // @route  PUT /api/delivery/orders/:id/deliver
 // @desc   Mark order as delivered
-// @access Private
-router.put('/orders/:id/deliver', authMiddleware, async (req, res) => {
+// @access Private - delivery only
+router.put('/orders/:id/deliver', authMiddleware, roleMiddleware('delivery'), async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
+
+    // Only the assigned delivery partner can mark as delivered
+    if (!order.deliveryPartner || order.deliveryPartner.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not your order to deliver.' });
+    }
+
+    if (order.status === 'delivered') {
+      return res.status(400).json({ success: false, message: 'Order already delivered.' });
+    }
 
     order.status = 'delivered';
     order.deliveredAt = new Date();
@@ -144,8 +173,8 @@ router.put('/orders/:id/deliver', authMiddleware, async (req, res) => {
 
     await DeliveryPartner.findOneAndUpdate(
       { user: req.user.id },
-      { 
-        isAvailable: true, 
+      {
+        isAvailable: true,
         currentOrder: null,
         $inc: { completedOrders: 1, totalEarnings: order.deliveryFee }
       }

@@ -23,12 +23,10 @@ router.get('/stats', ...adminOnly, async (req, res) => {
       ])
     ]);
 
-    // Orders by status
     const ordersByStatus = await Order.aggregate([
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]);
 
-    // Last 7 days revenue
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const dailyRevenue = await Order.aggregate([
       { $match: { status: 'delivered', createdAt: { $gte: sevenDaysAgo } } },
@@ -83,11 +81,17 @@ router.get('/users', ...adminOnly, async (req, res) => {
 });
 
 // @route  PUT /api/admin/users/:id
-// @desc   Update user (role, status)
+// @desc   Update user role or status only
 // @access Admin
 router.put('/users/:id', ...adminOnly, async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true }).select('-password');
+    const { role, isActive } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role, isActive },
+      { new: true }
+    ).select('-password');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
     res.json({ success: true, user });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
@@ -95,11 +99,21 @@ router.put('/users/:id', ...adminOnly, async (req, res) => {
 });
 
 // @route  DELETE /api/admin/users/:id
-// @desc   Delete user
+// @desc   Delete user (cannot delete admin or yourself)
 // @access Admin
 router.delete('/users/:id', ...adminOnly, async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.params.id);
+    const userToDelete = await User.findById(req.params.id);
+    if (!userToDelete) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+    if (userToDelete.role === 'admin') {
+      return res.status(403).json({ success: false, message: 'Cannot delete admin users.' });
+    }
+    if (userToDelete._id.toString() === req.user.id) {
+      return res.status(403).json({ success: false, message: 'Cannot delete yourself.' });
+    }
+    await userToDelete.deleteOne();
     res.json({ success: true, message: 'User deleted.' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
@@ -107,12 +121,18 @@ router.delete('/users/:id', ...adminOnly, async (req, res) => {
 });
 
 // @route  GET /api/admin/restaurants
-// @desc   Get all restaurants (including pending approval)
+// @desc   Get all restaurants with pagination
 // @access Admin
 router.get('/restaurants', ...adminOnly, async (req, res) => {
   try {
-    const restaurants = await Restaurant.find().populate('owner', 'name email').sort({ createdAt: -1 });
-    res.json({ success: true, restaurants });
+    const { page = 1, limit = 20 } = req.query;
+    const restaurants = await Restaurant.find()
+      .populate('owner', 'name email')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+    const total = await Restaurant.countDocuments();
+    res.json({ success: true, restaurants, total, pages: Math.ceil(total / limit) });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
   }
@@ -124,10 +144,11 @@ router.get('/restaurants', ...adminOnly, async (req, res) => {
 router.put('/restaurants/:id/approve', ...adminOnly, async (req, res) => {
   try {
     const restaurant = await Restaurant.findByIdAndUpdate(
-      req.params.id, 
+      req.params.id,
       { isApproved: req.body.isApproved !== false },
       { new: true }
     );
+    if (!restaurant) return res.status(404).json({ success: false, message: 'Restaurant not found.' });
     res.json({ success: true, restaurant });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
@@ -135,7 +156,7 @@ router.put('/restaurants/:id/approve', ...adminOnly, async (req, res) => {
 });
 
 // @route  GET /api/admin/orders
-// @desc   Get all orders
+// @desc   Get all orders with pagination
 // @access Admin
 router.get('/orders', ...adminOnly, async (req, res) => {
   try {

@@ -7,11 +7,11 @@ const authMiddleware = require('../middleware/auth');
 const roleMiddleware = require('../middleware/role');
 
 // @route  GET /api/restaurants
-// @desc   Get all approved restaurants (with filters)
+// @desc   Get all approved restaurants (with filters + pagination)
 // @access Public
 router.get('/', async (req, res) => {
   try {
-    const { search, cuisine, rating, veg, sort } = req.query;
+    const { search, cuisine, rating, veg, sort, page = 1, limit = 20 } = req.query;
 
     let query = { isApproved: true };
 
@@ -27,7 +27,10 @@ router.get('/', async (req, res) => {
     }
 
     if (rating) {
-      query.rating = { $gte: parseFloat(rating) };
+      const parsedRating = parseFloat(rating);
+      if (!isNaN(parsedRating)) {
+        query.rating = { $gte: parsedRating };
+      }
     }
 
     if (veg === 'true') {
@@ -40,26 +43,43 @@ router.get('/', async (req, res) => {
     if (sort === 'cost_low') sortQuery = { costForTwo: 1 };
     if (sort === 'cost_high') sortQuery = { costForTwo: -1 };
 
-    const restaurants = await Restaurant.find(query).sort(sortQuery).lean();
-    res.json({ success: true, restaurants });
+    const restaurants = await Restaurant.find(query)
+      .sort(sortQuery)
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .lean();
+
+    const total = await Restaurant.countDocuments(query);
+    res.json({ success: true, restaurants, total, pages: Math.ceil(total / limit) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Server error.' });
   }
 });
 
+// @route  GET /api/restaurants/owner/mine
+// @desc   Get restaurants owned by logged-in user
+// @access Private
+// ⚠️ This MUST be before /:id route to avoid being caught by it
+router.get('/owner/mine', authMiddleware, async (req, res) => {
+  try {
+    const restaurants = await Restaurant.find({ owner: req.user.id });
+    res.json({ success: true, restaurants });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error.' });
+  }
+});
+
 // @route  GET /api/restaurants/:id
-// @desc   Get single restaurant
+// @desc   Get single restaurant with menu
 // @access Public
 router.get('/:id', async (req, res) => {
   try {
-    let restaurant = null;
-    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-      restaurant = await Restaurant.findById(req.params.id).lean();
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: 'Invalid restaurant ID.' });
     }
-    if (!restaurant) {
-      restaurant = await Restaurant.findOne({ name: { $regex: req.params.id, $options: 'i' } }).lean();
-    }
+
+    const restaurant = await Restaurant.findById(req.params.id).lean();
     if (!restaurant) return res.status(404).json({ success: false, message: 'Restaurant not found.' });
 
     const menuItems = await MenuItem.find({ restaurant: restaurant._id, isAvailable: true }).lean();
@@ -84,11 +104,31 @@ router.get('/:id', async (req, res) => {
 });
 
 // @route  POST /api/restaurants
-// @desc   Create a restaurant (restaurant owner)
-// @access Private - restaurant role
+// @desc   Create a restaurant
+// @access Private - restaurant/admin role
 router.post('/', authMiddleware, roleMiddleware('restaurant', 'admin'), async (req, res) => {
   try {
-    const { name, description, cuisines, address, coverImage, deliveryTime, costForTwo, deliveryFee, isPureVeg } = req.body;
+    const {
+      name,
+      description,
+      cuisines,
+      address,
+      coverImage,
+      deliveryTime,
+      costForTwo,
+      deliveryFee,
+      isPureVeg
+    } = req.body;
+
+    if (!name || !address) {
+      return res.status(400).json({ success: false, message: 'Name and address are required.' });
+    }
+
+    // One restaurant per owner
+    const existing = await Restaurant.findOne({ owner: req.user.id });
+    if (existing && req.user.role !== 'admin') {
+      return res.status(409).json({ success: false, message: 'You already have a registered restaurant.' });
+    }
 
     const restaurant = await Restaurant.create({
       owner: req.user.id,
@@ -101,7 +141,7 @@ router.post('/', authMiddleware, roleMiddleware('restaurant', 'admin'), async (r
       costForTwo,
       deliveryFee,
       isPureVeg,
-      isApproved: false, // Needs admin approval
+      isApproved: false,
     });
 
     res.status(201).json({ success: true, restaurant });
@@ -116,6 +156,10 @@ router.post('/', authMiddleware, roleMiddleware('restaurant', 'admin'), async (r
 // @access Private - owner or admin
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: 'Invalid restaurant ID.' });
+    }
+
     const restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant) return res.status(404).json({ success: false, message: 'Restaurant not found.' });
 
@@ -123,7 +167,47 @@ router.put('/:id', authMiddleware, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized.' });
     }
 
-    const updated = await Restaurant.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    // Whitelist updatable fields — prevent owner/isApproved tampering
+    const {
+      name,
+      description,
+      cuisines,
+      address,
+      coverImage,
+      images,
+      deliveryTime,
+      costForTwo,
+      deliveryFee,
+      isPureVeg,
+      isOpen,
+      openingTime,
+      closingTime,
+      tags,
+      minOrder,
+    } = req.body;
+
+    const updated = await Restaurant.findByIdAndUpdate(
+      req.params.id,
+      {
+        name,
+        description,
+        cuisines,
+        address,
+        coverImage,
+        images,
+        deliveryTime,
+        costForTwo,
+        deliveryFee,
+        isPureVeg,
+        isOpen,
+        openingTime,
+        closingTime,
+        tags,
+        minOrder,
+      },
+      { new: true }
+    );
+
     res.json({ success: true, restaurant: updated });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
@@ -131,10 +215,14 @@ router.put('/:id', authMiddleware, async (req, res) => {
 });
 
 // @route  DELETE /api/restaurants/:id
-// @desc   Delete restaurant
+// @desc   Delete restaurant and its menu
 // @access Private - owner or admin
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: 'Invalid restaurant ID.' });
+    }
+
     const restaurant = await Restaurant.findById(req.params.id);
     if (!restaurant) return res.status(404).json({ success: false, message: 'Not found.' });
 
@@ -142,22 +230,10 @@ router.delete('/:id', authMiddleware, async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized.' });
     }
 
-    await Restaurant.findByIdAndDelete(req.params.id);
+    await restaurant.deleteOne();
     await MenuItem.deleteMany({ restaurant: req.params.id });
 
     res.json({ success: true, message: 'Restaurant and its menu deleted.' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Server error.' });
-  }
-});
-
-// @route  GET /api/restaurants/owner/mine
-// @desc   Get restaurants owned by the logged-in user
-// @access Private
-router.get('/owner/mine', authMiddleware, async (req, res) => {
-  try {
-    const restaurants = await Restaurant.find({ owner: req.user.id });
-    res.json({ success: true, restaurants });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
   }
