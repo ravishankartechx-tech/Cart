@@ -9,6 +9,8 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import AiFoodAssistant from './components/AiFoodAssistant';
+import CartDrawer from './components/CartDrawer';
+import MobileBottomNav from './components/MobileBottomNav';
 
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -30,35 +32,35 @@ const NO_FOOTER_PAGES = ['/login', '/signup'];
 
 // Sticky Cart Bottom Bar
 function StickyCart() {
-  const { cart, getCartTotal, getItemCount } = useCart();
+  const { getCartTotal, getItemCount, openCartDrawer } = useCart();
   const location = useLocation();
   const count = getItemCount();
 
   if (count === 0 || location.pathname === '/cart' || location.pathname === '/checkout') return null;
 
   return (
-    <div className="sticky-cart-bar pointer-events-none">
+    <div className="fixed bottom-20 md:bottom-6 left-0 right-0 z-40 px-4 pointer-events-none transition-all">
       <div className="max-w-3xl mx-auto pointer-events-auto">
-        <Link
-          to="/cart"
-          className="gradient-primary text-white p-4 rounded-2xl shadow-2xl flex justify-between items-center transform transition-transform hover:scale-[1.02] active:scale-[0.98]"
-          style={{ boxShadow: '0 8px 32px rgba(255,82,0,0.4)' }}
+        <button
+          onClick={openCartDrawer}
+          className="w-full gradient-primary text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl flex justify-between items-center transform transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+          style={{ boxShadow: '0 8px 32px rgba(255,82,0,0.45)' }}
         >
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center font-black text-sm">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center font-black text-xs sm:text-sm">
               {count}
             </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-white/80">
+            <div className="text-left">
+              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white/80">
                 {count} Item{count > 1 ? 's' : ''} in cart
               </p>
-              <p className="font-black text-sm">₹{getCartTotal().toFixed(2)} + taxes</p>
+              <p className="font-black text-xs sm:text-sm">₹{getCartTotal().toFixed(2)} + taxes</p>
             </div>
           </div>
-          <div className="font-extrabold flex items-center gap-2 text-sm">
+          <div className="font-extrabold flex items-center gap-1.5 text-xs sm:text-sm bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl backdrop-blur-sm transition-colors">
             View Cart →
           </div>
-        </Link>
+        </button>
       </div>
     </div>
   );
@@ -71,7 +73,7 @@ function AppLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
-      <main className="flex-grow pt-16">
+      <main className="flex-grow pt-16 pb-20 md:pb-0">
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<HomePage />} />
@@ -101,6 +103,8 @@ function AppLayout() {
         </Routes>
       </main>
       <StickyCart />
+      <CartDrawer />
+      <MobileBottomNav />
       <AiFoodAssistant />
       {showFooter && <Footer />}
     </div>

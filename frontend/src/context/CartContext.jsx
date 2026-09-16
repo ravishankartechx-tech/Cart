@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useState } from 'react';
 
 const CartContext = createContext(null);
 
@@ -92,6 +92,8 @@ export const CartProvider = ({ children }) => {
     }
   });
 
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+
   // Persist to localStorage
   useEffect(() => {
     localStorage.setItem('fr_cart', JSON.stringify(cart));
@@ -101,8 +103,22 @@ export const CartProvider = ({ children }) => {
   const getItemCount = () => cart.items.reduce((acc, i) => acc + i.qty, 0);
   const getItemQty = (id) => cart.items.find(i => i.id === id)?.qty || 0;
 
+  const openCartDrawer = () => setIsCartDrawerOpen(true);
+  const closeCartDrawer = () => setIsCartDrawerOpen(false);
+  const toggleCartDrawer = () => setIsCartDrawerOpen(prev => !prev);
+
   return (
-    <CartContext.Provider value={{ cart, dispatch, getCartTotal, getItemCount, getItemQty }}>
+    <CartContext.Provider value={{
+      cart,
+      dispatch,
+      getCartTotal,
+      getItemCount,
+      getItemQty,
+      isCartDrawerOpen,
+      openCartDrawer,
+      closeCartDrawer,
+      toggleCartDrawer
+    }}>
       {children}
     </CartContext.Provider>
   );

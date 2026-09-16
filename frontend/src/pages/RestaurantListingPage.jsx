@@ -129,27 +129,29 @@ const RestaurantListingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      {/* Header & Filter Controls */}
-      <div className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 sticky top-16 z-30 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-16">
+      {/* Header & Sticky Filter Controls */}
+      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 sticky top-16 z-30 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             {/* Search Input */}
-            <div className="relative flex-1 max-w-lg">
-              <HiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <div className="relative flex-1 max-w-xl">
+              <HiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500 w-5 h-5" />
               <input
                 type="text"
                 value={filters.search}
                 onChange={e => {
                   setFilters(p => ({ ...p, search: e.target.value }));
                 }}
-                placeholder="Search for restaurant, cuisine, or dish..."
-                className="input-base pl-11 h-11 text-sm bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 w-full"
+                placeholder="Search dishes, restaurants, or cuisines..."
+                className="w-full pl-12 pr-10 py-2.5 text-sm bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700 rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-[#ff5200] transition-all"
+                style={{ fontFamily: 'Inter, sans-serif' }}
               />
               {filters.search && (
                 <button
                   onClick={() => setFilters(p => ({ ...p, search: '' }))}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xl leading-none"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-lg cursor-pointer"
                 >
                   ×
                 </button>
@@ -157,61 +159,74 @@ const RestaurantListingPage = () => {
             </div>
 
             {/* Quick Favorites Toggle Pill */}
-            <button
-              onClick={toggleFavoritesFilter}
-              className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all duration-200 cursor-pointer ${
-                favoritesOnly
-                  ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-500'
-              }`}
-            >
-              <HiHeart className={`w-4 h-4 ${favoritesOnly ? 'fill-white' : 'text-rose-500'}`} />
-              <span>Saved Favorites ({favorites.length})</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={toggleFavoritesFilter}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all duration-200 cursor-pointer tap-active ${
+                  favoritesOnly
+                    ? 'bg-rose-500 text-white shadow-md shadow-rose-500/30'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-500 border border-gray-200/60 dark:border-gray-700'
+                }`}
+                style={{ fontFamily: 'Outfit, sans-serif' }}
+              >
+                <HiHeart className={`w-4 h-4 ${favoritesOnly ? 'fill-white' : 'text-rose-500'}`} />
+                <span>Saved ({favorites.length})</span>
+              </button>
+            </div>
           </div>
 
           {/* Filters Bar */}
-          <div className="flex items-center gap-3">
-            <HiAdjustments className="text-gray-400 w-5 h-5 shrink-0" />
+          <div className="pt-1">
             <FilterBar filters={filters} onChange={setFilters} />
           </div>
         </div>
       </div>
 
-      {/* Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
-            {loading ? 'Loading restaurants…' : `${restaurants.length} restaurant${restaurants.length !== 1 ? 's' : ''} available`}
-          </p>
+      {/* Grid Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        
+        <div className="flex items-center justify-between mb-5 sm:mb-6">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>
+              {favoritesOnly ? 'Saved Favorite Restaurants' : 'Restaurants Around You'}
+            </h1>
+            <span className="bg-orange-100 dark:bg-orange-950/50 text-[#ff5200] text-xs font-black px-2.5 py-0.5 rounded-full">
+              {loading ? '...' : restaurants.length}
+            </span>
+          </div>
+
           {favoritesOnly && (
             <span className="text-xs font-bold text-rose-500 bg-rose-50 dark:bg-rose-950/40 px-3 py-1 rounded-full border border-rose-200 dark:border-rose-800">
-              Showing Favorites Only
+              Favorites Filter Active
             </span>
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Restaurants Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
           {loading
-            ? Array(9).fill(0).map((_, i) => <SkeletonCard key={i} />)
-            : restaurants.map((r, i) => (
-                <div key={r.id} className="animate-in fade-in zoom-in-95 duration-200">
+            ? Array(6).fill(0).map((_, i) => <SkeletonCard key={i} />)
+            : restaurants.map((r) => (
+                <div key={r.id} className="animate-fade-in">
                   <RestaurantCard restaurant={r} />
                 </div>
               ))
           }
         </div>
 
+        {/* Empty State */}
         {!loading && restaurants.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-700 shadow-sm mt-4">
-            <div className="text-6xl mb-4">{favoritesOnly ? '❤️' : '🔍'}</div>
-            <h3 className="text-xl font-black text-gray-800 dark:text-white mb-1">
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm mt-4 max-w-lg mx-auto">
+            <div className="w-20 h-20 rounded-3xl bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center text-4xl mb-4 animate-float">
+              {favoritesOnly ? '❤️' : '🔍'}
+            </div>
+            <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2" style={{ fontFamily: 'Outfit, sans-serif' }}>
               {favoritesOnly ? 'No saved favorites yet' : 'No restaurants found'}
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm">
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-xs mb-6">
               {favoritesOnly
-                ? 'Click the heart icon on any restaurant card to save your favorite spots here!'
-                : 'Try clearing your search keyword or relaxing filter criteria.'}
+                ? 'Tap the heart icon on any restaurant card to save your top picks here!'
+                : 'Try clearing your search keyword or selecting a different cuisine filter.'}
             </p>
             <button
               onClick={() => {
@@ -219,7 +234,7 @@ const RestaurantListingPage = () => {
                 setFilters({ sort: '', veg: '', rating: '', cuisine: '', search: '' });
                 setSearchParams({});
               }}
-              className="mt-5 btn-primary px-6 py-2 text-xs rounded-xl cursor-pointer"
+              className="btn-primary px-7 py-3 rounded-2xl text-xs sm:text-sm font-extrabold shadow-lg cursor-pointer tap-active"
             >
               Show All Restaurants
             </button>

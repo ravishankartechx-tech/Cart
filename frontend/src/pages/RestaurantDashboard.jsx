@@ -122,26 +122,41 @@ const RestaurantDashboard = () => {
         </div>
 
         {/* Quick stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'New Orders', value: orders.filter(o => o.status === 'pending').length, color: 'text-[#ff5200]', emoji: '📋' },
-            { label: 'Preparing', value: orders.filter(o => o.status === 'preparing').length, color: 'text-blue-600', emoji: '👨‍🍳' },
-            { label: 'Menu Items', value: menu.length, color: 'text-purple-600', emoji: '🍽' },
+            { label: 'Incoming Orders', value: orders.filter(o => o.status === 'pending').length, color: 'text-[#ff5200]', bg: 'bg-orange-50 dark:bg-orange-950/40', emoji: '🔔' },
+            { label: 'In Kitchen', value: orders.filter(o => o.status === 'preparing').length, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/40', emoji: '👨‍🍳' },
+            { label: 'Ready for Pickup', value: orders.filter(o => o.status === 'ready').length, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/40', emoji: '🛍️' },
+            { label: 'Active Menu Dishes', value: menu.length, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/40', emoji: '🍽️' },
           ].map((s, i) => (
-            <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 text-center">
-              <div className="text-2xl mb-1">{s.emoji}</div>
-              <p className={`text-3xl font-black ${s.color}`}>{s.value}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{s.label}</p>
+            <div key={i} className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-5 shadow-xs transition-all hover:shadow-md">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`w-10 h-10 rounded-2xl ${s.bg} flex items-center justify-center text-xl`}>
+                  {s.emoji}
+                </div>
+                <span className={`text-2xl sm:text-3xl font-black ${s.color}`} style={{ fontFamily: 'Outfit, sans-serif' }}>
+                  {s.value}
+                </span>
+              </div>
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400">{s.label}</p>
             </div>
           ))}
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-white dark:bg-gray-800 rounded-2xl p-1 mb-6 border border-gray-100 dark:border-gray-700">
+        <div className="flex gap-2 bg-gray-100/80 dark:bg-gray-800/80 rounded-2xl p-1.5 mb-6 border border-gray-200/60 dark:border-gray-700 max-w-md">
           {['orders', 'menu'].map(t => (
-            <button key={t} onClick={() => setActiveTab(t)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold capitalize transition-all ${activeTab === t ? 'bg-[#ff5200] text-white' : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}>
-              {t === 'orders' ? `📋 Orders (${orders.length})` : `🍽 Menu (${menu.length})`}
+            <button
+              key={t}
+              onClick={() => setActiveTab(t)}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-black capitalize transition-all cursor-pointer tap-active ${
+                activeTab === t
+                  ? 'gradient-primary text-white shadow-md shadow-orange-500/25'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+              }`}
+              style={{ fontFamily: 'Outfit, sans-serif' }}
+            >
+              {t === 'orders' ? `📋 Active Orders (${orders.length})` : `🍽️ Menu Dishes (${menu.length})`}
             </button>
           ))}
         </div>
@@ -149,32 +164,55 @@ const RestaurantDashboard = () => {
         {activeTab === 'orders' && (
           <div className="space-y-4">
             {orders.map(order => (
-              <div key={order.id} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5">
-                <div className="flex items-start justify-between gap-4 mb-3">
+              <div key={order.id} className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-5 sm:p-6 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-black text-gray-900 dark:text-white">#{order.id?.slice?.(-6) || order.id}</span>
-                      <span className={`badge ${STATUS_COLOR[order.status] || 'badge-blue'}`}>{order.status}</span>
+                    <div className="flex items-center gap-2.5 mb-1">
+                      <span className="font-black text-gray-900 dark:text-white text-base" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                        #{order.id?.slice?.(-6) || order.id}
+                      </span>
+                      <span className={`badge ${STATUS_COLOR[order.status] || 'badge-blue'}`}>
+                        {order.status}
+                      </span>
                     </div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{order.user} · {order.time}</p>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                      {order.items.map(i => `${i.name} ×${i.qty}`).join(', ')}
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Customer: <strong className="text-gray-800 dark:text-gray-200">{order.user}</strong> • {order.time}
                     </p>
                   </div>
-                  <p className="font-black text-gray-900 dark:text-white text-lg shrink-0">₹{order.total}</p>
+
+                  <div className="text-left sm:text-right">
+                    <p className="text-xs text-gray-400 uppercase font-bold">Total Bill</p>
+                    <p className="font-black text-[#ff5200] text-xl" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                      ₹{order.total}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex gap-2 pt-3 border-t border-dashed border-gray-100 dark:border-gray-700">
+                {/* Items list pill tags */}
+                <div className="flex flex-wrap gap-2 mb-4 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-2xl border border-gray-100 dark:border-gray-800">
+                  {order.items.map((i, idx) => (
+                    <span key={idx} className="text-xs font-bold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 px-3 py-1 rounded-xl shadow-xs border border-gray-100 dark:border-gray-600">
+                      {i.name} <span className="text-[#ff5200]">×{i.qty}</span>
+                    </span>
+                  ))}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2.5 pt-3 border-t border-gray-100 dark:border-gray-800">
                   {STATUS_NEXT[order.status] && (
-                    <button onClick={() => updateOrderStatus(order.id, STATUS_NEXT[order.status])}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-[#ff5200] text-white text-sm font-bold rounded-xl hover:bg-orange-600 transition-colors">
+                    <button
+                      onClick={() => updateOrderStatus(order.id, STATUS_NEXT[order.status])}
+                      className="flex-1 btn-primary py-2.5 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 cursor-pointer tap-active shadow-md"
+                    >
                       <HiCheck className="w-4 h-4" /> {STATUS_LABEL_NEXT[order.status]}
                     </button>
                   )}
                   {['pending', 'confirmed'].includes(order.status) && (
-                    <button onClick={() => updateOrderStatus(order.id, 'cancelled')}
-                      className="flex items-center justify-center gap-1.5 px-4 py-2 border-2 border-red-200 text-red-500 text-sm font-bold rounded-xl hover:bg-red-50 transition-colors">
-                      <HiX className="w-4 h-4" /> Cancel
+                    <button
+                      onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                      className="px-5 py-2.5 border border-red-200 dark:border-red-900/50 text-red-500 text-xs sm:text-sm font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                    >
+                      <HiX className="inline w-4 h-4 mr-1" /> Reject
                     </button>
                   )}
                 </div>
@@ -182,9 +220,12 @@ const RestaurantDashboard = () => {
             ))}
 
             {orders.length === 0 && (
-              <div className="text-center py-16">
-                <div className="text-6xl mb-4">📭</div>
-                <p className="font-bold text-gray-600 dark:text-gray-300">No active orders</p>
+              <div className="text-center py-20 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-xs">
+                <div className="text-5xl mb-3 animate-float">📭</div>
+                <p className="font-black text-gray-900 dark:text-white text-base" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                  No active orders right now
+                </p>
+                <p className="text-xs text-gray-500 mt-1">New customer orders will appear here in real-time.</p>
               </div>
             )}
           </div>
@@ -192,28 +233,83 @@ const RestaurantDashboard = () => {
 
         {activeTab === 'menu' && (
           <div>
-            <div className="flex justify-end mb-4">
-              <button onClick={() => setShowAddItem(v => !v)} className="btn-primary py-2.5 px-5 text-sm">
-                <HiPlus className="w-4 h-4" /> Add Item
+            <div className="flex justify-between items-center mb-5">
+              <div>
+                <h3 className="font-black text-gray-900 dark:text-white text-base" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                  Menu Catalog ({menu.length} items)
+                </h3>
+                <p className="text-xs text-gray-500">Toggle availability or add fresh offerings</p>
+              </div>
+              <button
+                onClick={() => setShowAddItem(v => !v)}
+                className="btn-primary py-2 px-4 rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md cursor-pointer tap-active"
+              >
+                <HiPlus className="w-4 h-4" /> Add Dish
               </button>
             </div>
 
-            {/* Add item form */}
+            {/* Add item form modal / expandable */}
             {showAddItem && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl border-2 border-[#ff5200] p-5 mb-5 animate-fade-in">
-                <h3 className="font-black text-gray-900 dark:text-white mb-4">Add New Menu Item</h3>
-                <div className="grid grid-cols-2 gap-3 mb-3">
-                  <input placeholder="Item name" value={newItem.name} onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))} className="input-base text-sm" />
-                  <input placeholder="Category" value={newItem.category} onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))} className="input-base text-sm" />
-                  <input type="number" placeholder="Price (₹)" value={newItem.price} onChange={e => setNewItem(p => ({ ...p, price: e.target.value }))} className="input-base text-sm" />
-                  <div className="flex items-center gap-2 px-4 border-1.5 border-gray-200 rounded-xl">
-                    <input type="checkbox" id="isVeg" checked={newItem.isVeg} onChange={e => setNewItem(p => ({ ...p, isVeg: e.target.checked }))} className="accent-green-600" />
-                    <label htmlFor="isVeg" className="text-sm text-gray-700 dark:text-gray-300">Vegetarian</label>
+              <div className="bg-white dark:bg-gray-900 rounded-3xl border-2 border-[#ff5200] p-6 mb-6 shadow-xl animate-slide-up">
+                <h3 className="font-black text-gray-900 dark:text-white text-base mb-4" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                  ✨ Add New Dish to Menu
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 mb-1 block">Dish Name</label>
+                    <input
+                      placeholder="e.g. Paneer Butter Masala"
+                      value={newItem.name}
+                      onChange={e => setNewItem(p => ({ ...p, name: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm focus:outline-none focus:border-[#ff5200]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 mb-1 block">Category</label>
+                    <input
+                      placeholder="e.g. Main Course, Starters"
+                      value={newItem.category}
+                      onChange={e => setNewItem(p => ({ ...p, category: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm focus:outline-none focus:border-[#ff5200]"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 mb-1 block">Price (₹)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 290"
+                      value={newItem.price}
+                      onChange={e => setNewItem(p => ({ ...p, price: e.target.value }))}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-sm focus:outline-none focus:border-[#ff5200]"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 px-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 mt-6 sm:mt-0">
+                    <input
+                      type="checkbox"
+                      id="isVeg"
+                      checked={newItem.isVeg}
+                      onChange={e => setNewItem(p => ({ ...p, isVeg: e.target.checked }))}
+                      className="w-4 h-4 accent-green-600 rounded cursor-pointer"
+                    />
+                    <label htmlFor="isVeg" className="text-xs sm:text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer">
+                      🌿 100% Pure Vegetarian
+                    </label>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={addItem} className="btn-primary py-2 px-6 text-sm">Add Item</button>
-                  <button onClick={() => setShowAddItem(false)} className="btn-outline py-2 px-6 text-sm">Cancel</button>
+
+                <div className="flex gap-2.5">
+                  <button
+                    onClick={addItem}
+                    className="btn-primary py-2.5 px-6 rounded-xl text-xs sm:text-sm font-bold shadow-md cursor-pointer"
+                  >
+                    Save & Publish Dish
+                  </button>
+                  <button
+                    onClick={() => setShowAddItem(false)}
+                    className="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs sm:text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
             )}
@@ -221,26 +317,64 @@ const RestaurantDashboard = () => {
             {/* Menu list */}
             <div className="space-y-3">
               {menu.map(item => (
-                <div key={item.id || item._id} className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 flex items-center gap-4 ${!item.isAvailable ? 'opacity-60' : ''}`}>
+                <div
+                  key={item.id || item._id}
+                  className={`bg-white dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-4 flex items-center gap-4 transition-all shadow-xs ${
+                    !item.isAvailable ? 'opacity-50 grayscale-20' : ''
+                  }`}
+                >
                   {item.image && (
-                    <img src={item.image} alt={item.name} className="w-16 h-16 rounded-xl object-cover shrink-0" />
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl object-cover shrink-0 border border-gray-100 dark:border-gray-800"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&auto=format&fit=crop';
+                      }}
+                    />
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <div className={item.isVeg ? 'veg-dot' : 'nonveg-dot'} />
-                      <span className="font-bold text-gray-900 dark:text-white text-sm truncate">{item.name}</span>
-                      {item.isBestSeller && <span className="badge badge-orange text-[10px]">⭐ Bestseller</span>}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${item.isVeg ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60' : 'bg-red-100 text-red-700 dark:bg-red-950/60'}`}>
+                        {item.isVeg ? 'VEG' : 'NON-VEG'}
+                      </span>
+                      <h4 className="font-black text-gray-900 dark:text-white text-sm sm:text-base truncate" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                        {item.name}
+                      </h4>
+                      {item.isBestSeller && (
+                        <span className="badge badge-orange text-[9px] hidden sm:inline-flex">⭐ Bestseller</span>
+                      )}
                     </div>
-                    <p className="text-xs text-gray-400 mt-0.5">{item.category}</p>
-                    <p className="font-bold text-[#ff5200] text-sm mt-1">₹{item.price}</p>
+                    <p className="text-xs text-gray-400">{item.category}</p>
+                    <p className="font-black text-[#ff5200] text-sm mt-0.5">₹{item.price}</p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {/* Toggle availability */}
-                    <button onClick={() => toggleAvailability(item.id || item._id)}
-                      className={`w-10 h-5 rounded-full transition-all relative ${item.isAvailable ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
-                      <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${item.isAvailable ? 'left-5' : 'left-0.5'}`} />
-                    </button>
-                    <button onClick={() => removeItem(item.id || item._id)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
+
+                  {/* Controls: In-Stock Toggle + Delete */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex flex-col items-center gap-1">
+                      <button
+                        onClick={() => toggleAvailability(item.id || item._id)}
+                        aria-label="Toggle availability"
+                        className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${
+                          item.isAvailable ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-700'
+                        }`}
+                      >
+                        <div
+                          className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
+                            item.isAvailable ? 'translate-x-5.5' : 'translate-x-0.5'
+                          }`}
+                        />
+                      </button>
+                      <span className="text-[10px] font-bold text-gray-400">
+                        {item.isAvailable ? 'In Stock' : 'Sold Out'}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => removeItem(item.id || item._id)}
+                      className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors cursor-pointer"
+                      title="Delete dish"
+                    >
                       <HiTrash className="w-4 h-4" />
                     </button>
                   </div>

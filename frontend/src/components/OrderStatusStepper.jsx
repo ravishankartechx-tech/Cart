@@ -33,36 +33,43 @@ const OrderStatusStepper = ({ status = 'pending', estimatedDelivery, deliveredAt
     : null;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700">
+    <div className="bg-white dark:bg-gray-900 rounded-3xl p-5 sm:p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
       {/* ETA Banner */}
       {status !== 'delivered' && eta && (
-        <div className="mb-5 flex items-center justify-between bg-orange-50 dark:bg-orange-900/20 rounded-xl px-4 py-3">
+        <div className="mb-6 flex items-center justify-between bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 dark:from-orange-950/40 dark:via-amber-950/20 dark:to-orange-950/40 rounded-2xl p-4 border border-orange-200/80 dark:border-orange-900/40">
           <div>
-            <p className="text-xs font-semibold text-orange-500 uppercase tracking-wider">Estimated Delivery</p>
-            <p className="text-xl font-black text-gray-900 dark:text-white">{eta}</p>
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="live-dot" />
+              <p className="text-[11px] font-black text-orange-600 dark:text-orange-400 uppercase tracking-widest" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                Estimated Delivery
+              </p>
+            </div>
+            <p className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
+              {eta}
+            </p>
           </div>
-          <div className="text-3xl animate-float">🛵</div>
+          <div className="text-3xl sm:text-4xl animate-float">🛵</div>
         </div>
       )}
 
       {status === 'delivered' && deliveredAt && (
-        <div className="mb-5 bg-green-50 dark:bg-green-900/20 rounded-xl px-4 py-3 flex items-center gap-3">
-          <HiCheckCircle className="w-8 h-8 text-green-500 shrink-0" />
+        <div className="mb-6 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4 flex items-center gap-3">
+          <HiCheckCircle className="w-8 h-8 text-emerald-500 shrink-0" />
           <div>
-            <p className="font-bold text-green-700 dark:text-green-400">Delivered!</p>
-            <p className="text-xs text-gray-500">
-              at {new Date(deliveredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <p className="font-black text-emerald-700 dark:text-emerald-400 text-base" style={{ fontFamily: 'Outfit, sans-serif' }}>Delivered Successfully!</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Handed over at {new Date(deliveredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
         </div>
       )}
 
       {/* Steps */}
-      <div className="relative">
+      <div className="relative pl-1">
         {/* Progress line */}
-        <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-gray-200 dark:bg-gray-600" />
+        <div className="absolute left-[23px] top-6 bottom-6 w-1 bg-gray-100 dark:bg-gray-800 rounded-full" />
         <div
-          className="absolute left-5 top-5 w-0.5 bg-[#ff5200] transition-all duration-700"
+          className="absolute left-[23px] top-6 w-1 gradient-primary rounded-full transition-all duration-700 shadow-sm"
           style={{ height: `${(currentIdx / (ORDER_STEPS.length - 1)) * 100}%` }}
         />
 
@@ -73,22 +80,24 @@ const OrderStatusStepper = ({ status = 'pending', estimatedDelivery, deliveredAt
             return (
               <div key={step.key} className="flex items-start gap-4 relative">
                 {/* Icon circle */}
-                <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-lg shrink-0 transition-all duration-300 ${
-                  isCompleted ? 'bg-green-500' :
-                  isCurrent  ? 'bg-[#ff5200] shadow-lg shadow-orange-200 dark:shadow-orange-900 scale-110' :
-                  'bg-gray-200 dark:bg-gray-600'
+                <div className={`relative z-10 w-11 h-11 rounded-2xl flex items-center justify-center text-lg shrink-0 transition-all duration-300 ${
+                  isCompleted ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' :
+                  isCurrent  ? 'gradient-primary text-white shadow-xl shadow-orange-500/35 scale-110' :
+                  'bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
                 }`}>
                   {isCompleted ? <HiCheckCircle className="w-6 h-6 text-white" /> :
-                   <span className={isCurrent ? 'animate-pulse' : 'grayscale opacity-60'}>{step.emoji}</span>}
+                   <span className={isCurrent ? 'animate-bounce' : 'grayscale opacity-40'}>{step.emoji}</span>}
                 </div>
 
                 {/* Text */}
-                <div className={`pt-1.5 transition-opacity duration-300 ${!isCompleted && !isCurrent ? 'opacity-40' : ''}`}>
-                  <p className={`font-semibold text-sm ${isCurrent ? 'text-[#ff5200]' : 'text-gray-800 dark:text-white'}`}>
+                <div className={`pt-1 transition-opacity duration-300 ${!isCompleted && !isCurrent ? 'opacity-40' : ''}`}>
+                  <p className={`font-black text-sm flex items-center gap-2 ${isCurrent ? 'text-[#ff5200]' : 'text-gray-900 dark:text-white'}`} style={{ fontFamily: 'Outfit, sans-serif' }}>
                     {step.label}
-                    {isCurrent && <span className="ml-2 inline-flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-[#ff5200] rounded-full animate-ping" />
-                    </span>}
+                    {isCurrent && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-orange-100 dark:bg-orange-950/60 text-[#ff5200]">
+                        In Progress
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{step.desc}</p>
                 </div>

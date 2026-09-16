@@ -10,7 +10,7 @@ import {
 } from 'react-icons/hi';
 
 const Navbar = () => {
-  const { getItemCount, getCartTotal } = useCart();
+  const { getItemCount, getCartTotal, openCartDrawer } = useCart();
   const { user, logout, isAuthenticated } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { favoriteCount } = useFavorites();
@@ -170,21 +170,22 @@ const Navbar = () => {
               )}
             </Link>
 
-            {/* Cart — pill with total when items exist */}
+            {/* Cart — pill with total when items exist, triggers CartDrawer */}
             {count > 0 ? (
-              <Link
-                to="/cart"
-                className="flex items-center gap-2 pl-3 pr-4 py-2 gradient-primary text-white rounded-full shadow-md hover:shadow-orange-300/50 transition-all duration-200 hover:scale-105 active:scale-95 text-sm font-bold"
+              <button
+                onClick={openCartDrawer}
+                className="flex items-center gap-2 pl-3 pr-4 py-2 gradient-primary text-white rounded-full shadow-md hover:shadow-orange-300/50 transition-all duration-200 hover:scale-105 active:scale-95 text-sm font-bold cursor-pointer"
                 style={{ fontFamily: 'Outfit, sans-serif', boxShadow: '0 4px 14px rgba(255,82,0,0.35)' }}
+                title="View Cart Drawer"
               >
                 <HiShoppingCart className="w-4 h-4" />
                 <span>{count}</span>
                 <span className="text-white/80 font-normal text-xs border-l border-white/30 pl-2">₹{cartTotal.toFixed(0)}</span>
-              </Link>
+              </button>
             ) : (
-              <Link
-                to="/cart"
-                className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 hover:text-[#ff5200] ${
+              <button
+                onClick={openCartDrawer}
+                className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110 hover:text-[#ff5200] cursor-pointer ${
                   scrolled
                     ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-orange-950/40'
                     : 'bg-white/20 dark:bg-gray-800/50 backdrop-blur-sm text-gray-700 dark:text-gray-200 hover:bg-white/40'
@@ -192,7 +193,7 @@ const Navbar = () => {
                 title="Shopping Cart"
               >
                 <HiShoppingCart className="w-5 h-5" />
-              </Link>
+              </button>
             )}
 
             {/* Auth */}
