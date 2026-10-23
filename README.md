@@ -73,3 +73,9 @@ food-delivery-app/
 - **Run Backend Only**: `npm run dev:backend`
 - **Build Frontend Bundle**: `npm run build`
 - **Seed Database**: `npm run seed`
+
+---
+
+## 🌐 Live Demo
+
+🚀 **Live Website:** https://cart-frontend-two.vercel.app
